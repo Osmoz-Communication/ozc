@@ -1,0 +1,217 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+interface ContentItem {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  category?: string;
+  date?: string;
+  content?: string;
+}
+
+interface ContentContextType {
+  services: ContentItem[];
+  sectors: ContentItem[];
+  portfolioItems: ContentItem[];
+  newsArticles: ContentItem[];
+  updateContent: (type: string, items: ContentItem[]) => void;
+  addContentItem: (type: string, item: ContentItem) => void;
+  deleteContentItem: (type: string, id: string) => void;
+}
+
+const ContentContext = createContext<ContentContextType | undefined>(undefined);
+
+export const useContent = () => {
+  const context = useContext(ContentContext);
+  if (!context) {
+    throw new Error('useContent must be used within a ContentProvider');
+  }
+  return context;
+};
+
+const initialServices: ContentItem[] = [
+  {
+    id: '1',
+    title: 'Signalétique',
+    description: 'Solutions de signalétique sur mesure pour votre entreprise',
+    category: 'service'
+  },
+  {
+    id: '2',
+    title: 'Enseigne',
+    description: 'Création d\'enseignes lumineuses et non-lumineuses',
+    category: 'service'
+  },
+  {
+    id: '3',
+    title: 'Gravure',
+    description: 'Gravure laser et mécanique de précision',
+    category: 'service'
+  },
+  {
+    id: '4',
+    title: 'Impression Numérique',
+    description: 'Impression grand format haute qualité',
+    category: 'service'
+  },
+  {
+    id: '5',
+    title: 'Film Solaire et Technique',
+    description: 'Pose de films de protection et décoratifs',
+    category: 'service'
+  },
+  {
+    id: '6',
+    title: 'Habillage et Décor',
+    description: 'Habillage de véhicules et décoration d\'espaces',
+    category: 'service'
+  }
+];
+
+const initialSectors: ContentItem[] = [
+  {
+    id: '1',
+    title: 'Hôtellerie',
+    description: 'Solutions adaptées au secteur hôtelier',
+    category: 'sector'
+  },
+  {
+    id: '2',
+    title: 'Industrie',
+    description: 'Signalétique industrielle et de sécurité',
+    category: 'sector'
+  },
+  {
+    id: '3',
+    title: 'Tertiaire',
+    description: 'Communication visuelle pour bureaux et commerces',
+    category: 'sector'
+  },
+  {
+    id: '4',
+    title: 'Commerce',
+    description: 'Solutions retail et points de vente',
+    category: 'sector'
+  },
+  {
+    id: '5',
+    title: 'Événementiel',
+    description: 'Supports de communication événementielle',
+    category: 'sector'
+  }
+];
+
+const initialPortfolio: ContentItem[] = [
+  {
+    id: '1',
+    title: 'Projet Hôtel Luxe',
+    description: 'Signalétique complète pour hôtel 5 étoiles',
+    image: 'https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'hôtellerie'
+  },
+  {
+    id: '2',
+    title: 'Enseigne Restaurant',
+    description: 'Enseigne lumineuse pour restaurant gastronomique',
+    image: 'https://images.pexels.com/photos/260931/pexels-photo-260931.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'commerce'
+  },
+  {
+    id: '3',
+    title: 'Signalétique Industrielle',
+    description: 'Panneaux de sécurité et directionnels',
+    image: 'https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'industrie'
+  }
+];
+
+const initialNews: ContentItem[] = [
+  {
+    id: '1',
+    title: 'Nouvelle machine de découpe laser',
+    description: 'Nous avons investi dans une nouvelle machine de découpe laser pour améliorer notre précision',
+    date: '2024-01-15',
+    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...'
+  },
+  {
+    id: '2',
+    title: 'Partenariat avec éco-responsable',
+    description: 'Osmoz Communication s\'engage dans une démarche éco-responsable',
+    date: '2024-01-10',
+    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...'
+  }
+];
+
+export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [services, setServices] = useState<ContentItem[]>(initialServices);
+  const [sectors, setSectors] = useState<ContentItem[]>(initialSectors);
+  const [portfolioItems, setPortfolioItems] = useState<ContentItem[]>(initialPortfolio);
+  const [newsArticles, setNewsArticles] = useState<ContentItem[]>(initialNews);
+
+  const updateContent = (type: string, items: ContentItem[]) => {
+    switch (type) {
+      case 'services':
+        setServices(items);
+        break;
+      case 'sectors':
+        setSectors(items);
+        break;
+      case 'portfolio':
+        setPortfolioItems(items);
+        break;
+      case 'news':
+        setNewsArticles(items);
+        break;
+    }
+  };
+
+  const addContentItem = (type: string, item: ContentItem) => {
+    const newItem = { ...item, id: Date.now().toString() };
+    switch (type) {
+      case 'services':
+        setServices(prev => [...prev, newItem]);
+        break;
+      case 'sectors':
+        setSectors(prev => [...prev, newItem]);
+        break;
+      case 'portfolio':
+        setPortfolioItems(prev => [...prev, newItem]);
+        break;
+      case 'news':
+        setNewsArticles(prev => [...prev, newItem]);
+        break;
+    }
+  };
+
+  const deleteContentItem = (type: string, id: string) => {
+    switch (type) {
+      case 'services':
+        setServices(prev => prev.filter(item => item.id !== id));
+        break;
+      case 'sectors':
+        setSectors(prev => prev.filter(item => item.id !== id));
+        break;
+      case 'portfolio':
+        setPortfolioItems(prev => prev.filter(item => item.id !== id));
+        break;
+      case 'news':
+        setNewsArticles(prev => prev.filter(item => item.id !== id));
+        break;
+    }
+  };
+
+  return (
+    <ContentContext.Provider value={{
+      services,
+      sectors,
+      portfolioItems,
+      newsArticles,
+      updateContent,
+      addContentItem,
+      deleteContentItem
+    }}>
+      {children}
+    </ContentContext.Provider>
+  );
+};
