@@ -24,7 +24,25 @@
       ]
     },
     {
-      "source": "/(administration|osmozcom77120|login|admin).*",
+      "source": "/administration",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/osmozcom77120",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/login",
       "headers": [
         {
           "key": "Cache-Control",
