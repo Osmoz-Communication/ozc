@@ -5,28 +5,6 @@
       "destination": "/index.html"
     }
   ],
-  "routes": [
-    {
-      "src": "/login",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/administration",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/osmozcom77120",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -54,8 +32,5 @@
         }
       ]
     }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite"
+  ]
 } 
