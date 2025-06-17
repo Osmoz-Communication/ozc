@@ -10,14 +10,39 @@ interface ContentItem {
   content?: string;
 }
 
+interface SlideItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+  buttonText: string;
+  buttonLink: string;
+}
+
+interface HeroImage {
+  id: string;
+  page: string;
+  image: string;
+  title?: string;
+  subtitle?: string;
+}
+
 interface ContentContextType {
   services: ContentItem[];
   sectors: ContentItem[];
   portfolioItems: ContentItem[];
   newsArticles: ContentItem[];
+  slides: SlideItem[];
+  heroImages: HeroImage[];
   updateContent: (type: string, items: ContentItem[]) => void;
   addContentItem: (type: string, item: ContentItem) => void;
   deleteContentItem: (type: string, id: string) => void;
+  updateSlides: (slides: SlideItem[]) => void;
+  addSlide: (slide: SlideItem) => void;
+  deleteSlide: (id: string) => void;
+  updateHeroImages: (heroImages: HeroImage[]) => void;
+  updateHeroImage: (page: string, image: string, title?: string, subtitle?: string) => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -143,11 +168,88 @@ const initialNews: ContentItem[] = [
   }
 ];
 
+const initialSlides: SlideItem[] = [
+  {
+    id: '1',
+    title: 'Se faire voir, connaître et reconnaître',
+    subtitle: 'Expert en Communication Visuelle',
+    description: 'Spécialisés dans la création et la mise en œuvre de solutions de communication visuelle qui captivent et inspirent.',
+    image: 'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    buttonText: 'Découvrir nos réalisations',
+    buttonLink: '/portfolio'
+  },
+  {
+    id: '2',
+    title: 'Innovation et Créativité',
+    subtitle: 'Technologies de Pointe',
+    description: 'Nous utilisons les dernières technologies pour créer des solutions visuelles innovantes et percutantes.',
+    image: 'https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    buttonText: 'Nos services',
+    buttonLink: '/services'
+  },
+  {
+    id: '3',
+    title: 'Votre Partenaire de Confiance',
+    subtitle: 'Plus de 10 ans d\'Expérience',
+    description: 'Une expertise reconnue au service de votre image et de votre développement commercial.',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    buttonText: 'Nous contacter',
+    buttonLink: '/contact'
+  }
+];
+
+const initialHeroImages: HeroImage[] = [
+  {
+    id: '1',
+    page: 'about',
+    image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'À Propos d\'Osmoz Communication',
+    subtitle: 'Votre expertise en communication visuelle'
+  },
+  {
+    id: '2',
+    page: 'services',
+    image: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'Nos Services',
+    subtitle: 'Solutions complètes de communication visuelle'
+  },
+  {
+    id: '3',
+    page: 'sectors',
+    image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'Nos Secteurs d\'Activité',
+    subtitle: 'Des solutions adaptées à chaque métier'
+  },
+  {
+    id: '4',
+    page: 'portfolio',
+    image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'Notre Portfolio',
+    subtitle: 'Découvrez nos plus belles réalisations'
+  },
+  {
+    id: '5',
+    page: 'news',
+    image: 'https://images.pexels.com/photos/3184432/pexels-photo-3184432.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'Actualités',
+    subtitle: 'Restez informé de nos dernières nouveautés'
+  },
+  {
+    id: '6',
+    page: 'contact',
+    image: 'https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080',
+    title: 'Contactez-nous',
+    subtitle: 'Démarrons votre projet ensemble'
+  }
+];
+
 export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [services, setServices] = useState<ContentItem[]>(initialServices);
   const [sectors, setSectors] = useState<ContentItem[]>(initialSectors);
   const [portfolioItems, setPortfolioItems] = useState<ContentItem[]>(initialPortfolio);
   const [newsArticles, setNewsArticles] = useState<ContentItem[]>(initialNews);
+  const [slides, setSlides] = useState<SlideItem[]>(initialSlides);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
 
   const updateContent = (type: string, items: ContentItem[]) => {
     switch (type) {
@@ -201,15 +303,47 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const updateSlides = (newSlides: SlideItem[]) => {
+    setSlides(newSlides);
+  };
+
+  const addSlide = (slide: SlideItem) => {
+    const newSlide = { ...slide, id: Date.now().toString() };
+    setSlides(prev => [...prev, newSlide]);
+  };
+
+  const deleteSlide = (id: string) => {
+    setSlides(prev => prev.filter(slide => slide.id !== id));
+  };
+
+  const updateHeroImages = (newHeroImages: HeroImage[]) => {
+    setHeroImages(newHeroImages);
+  };
+
+  const updateHeroImage = (page: string, image: string, title?: string, subtitle?: string) => {
+    setHeroImages(prev => prev.map(hero => 
+      hero.page === page 
+        ? { ...hero, image, title: title || hero.title, subtitle: subtitle || hero.subtitle }
+        : hero
+    ));
+  };
+
   return (
     <ContentContext.Provider value={{
       services,
       sectors,
       portfolioItems,
       newsArticles,
+      slides,
+      heroImages,
       updateContent,
       addContentItem,
-      deleteContentItem
+      deleteContentItem,
+      updateSlides,
+      addSlide,
+      deleteSlide,
+      updateHeroImages,
+      updateHeroImage
     }}>
       {children}
     </ContentContext.Provider>

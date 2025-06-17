@@ -1,13 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
-import { Building, Factory, Store, Calendar, Mouse as Museum, Hotel } from 'lucide-react';
+import { Building, Factory, Store, Calendar, Mouse as Museum, Hotel, ArrowRight } from 'lucide-react';
+import { HeroSection } from '../components/HeroSection';
 
 export const Sectors: React.FC = () => {
   const { sectors } = useContent();
 
   const sectorDetails = {
     'Hôtellerie': {
+      slug: 'hotellerie',
       icon: Hotel,
       image: 'https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Créez une expérience client unique avec une signalétique élégante et fonctionnelle adaptée au secteur hôtelier.',
@@ -15,13 +18,15 @@ export const Sectors: React.FC = () => {
       projects: ['Hôtel Intercontinental Lyon', 'Resort Les Deux Alpes', 'Château de Bagnols']
     },
     'Industrie': {
+      slug: 'industrie',
       icon: Factory,
-      image: 'https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: 'https://images.pexels.com/photos/236722/pexels-photo-236722.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Sécurité et efficacité au cœur de nos solutions industrielles avec une signalétique robuste et conforme.',
       services: ['Signalétique de sécurité', 'Marquage au sol', 'Panneaux d\'information', 'Habillage de machines'],
       projects: ['Usine Michelin', 'Site Arkema', 'Plateforme logistique Amazon']
     },
     'Tertiaire': {
+      slug: 'tertiaire',
       icon: Building,
       image: 'https://images.pexels.com/photos/2977304/pexels-photo-2977304.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Valorisez votre image corporate avec des solutions de communication visuelle professionnelles.',
@@ -29,6 +34,7 @@ export const Sectors: React.FC = () => {
       projects: ['Siège social Crédit Agricole', 'Immeuble Part-Dieu Business', 'Campus Université Lyon 3']
     },
     'Commerce': {
+      slug: 'commerce',
       icon: Store,
       image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Attirez et guidez vos clients avec des solutions retail percutantes et attractives.',
@@ -36,6 +42,7 @@ export const Sectors: React.FC = () => {
       projects: ['Centre commercial Confluence', 'Boutique Hermès Lyon', 'Réseau pharmacies Giphar']
     },
     'Événementiel': {
+      slug: 'evenementiel',
       icon: Calendar,
       image: 'https://images.pexels.com/photos/2608513/pexels-photo-2608513.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Donnez de l\'impact à vos événements avec des supports de communication temporaires et mobiles.',
@@ -43,6 +50,7 @@ export const Sectors: React.FC = () => {
       projects: ['Salon Pollutec', 'Festival Lumières Lyon', 'Congrès médical Part-Dieu']
     },
     'Musée et Parc à Thème': {
+      slug: 'musee-parc',
       icon: Museum,
       image: 'https://images.pexels.com/photos/2563917/pexels-photo-2563917.jpeg?auto=compress&cs=tinysrgb&w=800',
       description: 'Créez des parcours immersifs et pédagogiques avec une signalétique adaptée au secteur culturel.',
@@ -52,26 +60,14 @@ export const Sectors: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative py-20 bg-slate-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Secteurs d'Activité
-            </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Nous adaptons nos solutions de communication visuelle aux spécificités 
-              et aux enjeux de chaque secteur d'activité.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSection 
+        page="secteurs"
+        defaultTitle="Secteurs d'Activité"
+        defaultSubtitle="Expertise spécialisée par secteur"
+        defaultImage="https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+      />
 
       {/* Sectors Overview */}
       <section className="py-20 bg-white">
@@ -95,21 +91,28 @@ export const Sectors: React.FC = () => {
                       alt={sector.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute top-4 left-4 w-12 h-12 bg-lime-500 rounded-full flex items-center justify-center">
+                    <div className="absolute top-4 left-4 w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center">
                       <details.icon className="text-white" size={24} />
                     </div>
                   </div>
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-slate-800 mb-3">{sector.title}</h3>
                     <p className="text-slate-600 mb-4">{details.description}</p>
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-lime-600">Services principaux :</div>
+                    <div className="space-y-2 mb-6">
+                      <div className="text-sm font-medium text-brand-600">Services principaux :</div>
                       <ul className="text-sm text-slate-600 space-y-1">
                         {details.services.slice(0, 2).map((service, serviceIndex) => (
                           <li key={serviceIndex}>• {service}</li>
                         ))}
                       </ul>
                     </div>
+                    <Link 
+                      to={`/secteurs/${details.slug}`}
+                      className="inline-flex items-center text-brand-600 hover:text-brand-700 font-semibold transition-colors"
+                    >
+                      Découvrir ce secteur
+                      <ArrowRight size={16} className="ml-2" />
+                    </Link>
                   </div>
                 </motion.div>
               );
@@ -121,8 +124,21 @@ export const Sectors: React.FC = () => {
       {/* Detailed Sectors */}
       <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-slate-800 mb-6">Expertise Sectorielle</h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Nous adaptons nos solutions aux spécificités de chaque secteur d'activité pour répondre 
+              parfaitement à vos enjeux métiers.
+            </p>
+          </motion.div>
+
           <div className="space-y-20">
-            {sectors.map((sector, index) => {
+            {sectors.slice(0, 3).map((sector, index) => {
               const details = sectorDetails[sector.title as keyof typeof sectorDetails];
               if (!details) return null;
 
@@ -143,20 +159,20 @@ export const Sectors: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-6">
-                      <div className="w-16 h-16 bg-lime-500 rounded-full flex items-center justify-center">
+                      <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center">
                         <details.icon className="text-white" size={32} />
                       </div>
                       <h2 className="text-4xl font-bold text-slate-800">{sector.title}</h2>
                     </div>
                     <p className="text-xl text-slate-600 mb-8">{details.description}</p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                       <div>
                         <h4 className="text-lg font-semibold text-slate-800 mb-4">Nos services</h4>
                         <ul className="space-y-2">
                           {details.services.map((service, serviceIndex) => (
                             <li key={serviceIndex} className="text-slate-600 flex items-center">
-                              <div className="w-2 h-2 bg-lime-500 rounded-full mr-3"></div>
+                              <div className="w-2 h-2 bg-brand-500 rounded-full mr-3"></div>
                               {service}
                             </li>
                           ))}
@@ -167,13 +183,21 @@ export const Sectors: React.FC = () => {
                         <ul className="space-y-2">
                           {details.projects.map((project, projectIndex) => (
                             <li key={projectIndex} className="text-slate-600 flex items-center">
-                              <div className="w-2 h-2 bg-lime-500 rounded-full mr-3"></div>
+                              <div className="w-2 h-2 bg-brand-500 rounded-full mr-3"></div>
                               {project}
                             </li>
                           ))}
                         </ul>
                       </div>
                     </div>
+
+                    <Link 
+                      to={`/secteurs/${details.slug}`}
+                      className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
+                    >
+                      Voir les détails
+                      <ArrowRight size={20} className="ml-2" />
+                    </Link>
                   </div>
                 </motion.div>
               );
@@ -183,7 +207,7 @@ export const Sectors: React.FC = () => {
       </section>
 
       {/* Expertise Section */}
-      <section className="py-20 bg-lime-500 text-white">
+      <section className="py-20 bg-brand-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -192,7 +216,7 @@ export const Sectors: React.FC = () => {
             className="text-center"
           >
             <h2 className="text-4xl font-bold mb-8">Une Expertise Transversale</h2>
-            <p className="text-xl text-lime-100 max-w-4xl mx-auto mb-12">
+            <p className="text-xl text-brand-100 max-w-4xl mx-auto mb-12">
               Quel que soit votre secteur d'activité, nous mettons notre expertise technique et créative 
               au service de vos projets de communication visuelle. Notre connaissance approfondie des 
               contraintes et opportunités de chaque secteur nous permet de vous proposer des solutions 
@@ -201,15 +225,15 @@ export const Sectors: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2">500+</div>
-                <div className="text-lime-100">Clients multi-secteurs</div>
+                <div className="text-brand-100">Clients multi-secteurs</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2">15</div>
-                <div className="text-lime-100">Années d'expérience</div>
+                <div className="text-brand-100">Années d'expérience</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2">100%</div>
-                <div className="text-lime-100">Solutions sur-mesure</div>
+                <div className="text-brand-100">Solutions sur-mesure</div>
               </div>
             </div>
           </motion.div>
@@ -229,9 +253,12 @@ export const Sectors: React.FC = () => {
               Discutons de vos enjeux sectoriels et découvrez comment nous pouvons adapter 
               nos solutions à vos besoins spécifiques.
             </p>
-            <button className="bg-lime-500 hover:bg-lime-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+            <Link 
+              to="/contact"
+              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
               Parler à un expert
-            </button>
+            </Link>
           </motion.div>
         </div>
       </section>

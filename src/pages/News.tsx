@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 import { Calendar, ArrowRight } from 'lucide-react';
+import { HeroSection } from '../components/HeroSection';
 
 export const News: React.FC = () => {
   const { newsArticles } = useContent();
@@ -16,26 +17,14 @@ export const News: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative py-20 bg-slate-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Actualités
-            </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Restez informé de nos dernières actualités, nouveautés et réalisations. 
-              Découvrez l'évolution de notre entreprise et de notre secteur.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSection 
+        page="actualites"
+        defaultTitle="Actualités"
+        defaultSubtitle="Toute l'actualité d'Osmoz Communication"
+        defaultImage="https://images.pexels.com/photos/1043458/pexels-photo-1043458.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+      />
 
       {/* Featured Article */}
       {newsArticles.length > 0 && (
@@ -45,11 +34,11 @@ export const News: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="bg-lime-50 rounded-2xl overflow-hidden shadow-lg"
+              className="bg-brand-50 rounded-2xl overflow-hidden shadow-lg"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <div className="p-12 flex flex-col justify-center">
-                  <div className="flex items-center space-x-2 text-lime-600 mb-4">
+                  <div className="flex items-center space-x-2 text-brand-600 mb-4">
                     <Calendar size={20} />
                     <span className="text-sm font-medium">À la une</span>
                   </div>
@@ -63,7 +52,7 @@ export const News: React.FC = () => {
                     <span className="text-sm text-slate-500">
                       {formatDate(newsArticles[0].date || '')}
                     </span>
-                    <button className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                    <button className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
                       Lire la suite
                       <ArrowRight size={16} className="ml-2" />
                     </button>
@@ -112,7 +101,7 @@ export const News: React.FC = () => {
                     alt={article.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute top-4 left-4 bg-lime-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  <div className="absolute top-4 left-4 bg-brand-500 text-white px-3 py-1 rounded-full text-xs font-medium">
                     Nouveauté
                   </div>
                 </div>
@@ -121,13 +110,13 @@ export const News: React.FC = () => {
                     <Calendar size={16} />
                     <span className="text-sm">{formatDate(article.date || '')}</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-3 group-hover:text-lime-600 transition-colors">
+                  <h3 className="text-xl font-semibold text-slate-800 mb-3 group-hover:text-brand-600 transition-colors">
                     {article.title}
                   </h3>
                   <p className="text-slate-600 mb-4 line-clamp-3">
                     {article.description}
                   </p>
-                  <button className="text-lime-600 hover:text-lime-700 font-medium transition-colors inline-flex items-center">
+                  <button className="text-brand-600 hover:text-brand-700 font-medium transition-colors inline-flex items-center">
                     Lire l'article
                     <ArrowRight size={16} className="ml-2" />
                   </button>
@@ -146,7 +135,7 @@ export const News: React.FC = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-20 bg-lime-500 text-white">
+      <section className="py-20 bg-brand-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -155,7 +144,7 @@ export const News: React.FC = () => {
             className="text-center"
           >
             <h2 className="text-4xl font-bold mb-6">Restez informé</h2>
-            <p className="text-xl text-lime-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-brand-100 mb-8 max-w-3xl mx-auto">
               Inscrivez-vous à notre newsletter pour recevoir nos dernières actualités, 
               conseils et réalisations directement dans votre boîte mail.
             </p>

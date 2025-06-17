@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
 import { Filter, X } from 'lucide-react';
+import { HeroSection } from '../components/HeroSection';
 
 export const Portfolio: React.FC = () => {
   const { portfolioItems } = useContent();
@@ -15,26 +17,14 @@ export const Portfolio: React.FC = () => {
     : portfolioItems.filter(item => item.category === selectedCategory);
 
   return (
-    <div>
+    <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative py-20 bg-slate-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Notre Portfolio
-            </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Découvrez nos réalisations et laissez-vous inspirer par la diversité 
-              et la qualité de nos projets de communication visuelle.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSection 
+        page="portfolio"
+        defaultTitle="Notre Portfolio"
+        defaultSubtitle="Découvrez nos réalisations"
+        defaultImage="https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+      />
 
       {/* Filter Section */}
       <section className="py-12 bg-white border-b border-gray-200">
@@ -46,8 +36,8 @@ export const Portfolio: React.FC = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                   selectedCategory === category
-                    ? 'bg-lime-500 text-white shadow-lg transform scale-105'
-                    : 'bg-gray-100 text-slate-700 hover:bg-lime-100 hover:text-lime-700'
+                    ? 'bg-brand-500 text-white shadow-lg transform scale-105'
+                    : 'bg-gray-100 text-slate-700 hover:bg-brand-100 hover:text-brand-700'
                 }`}
               >
                 {category === 'all' ? 'Tous les projets' : category.charAt(0).toUpperCase() + category.slice(1)}
@@ -86,7 +76,7 @@ export const Portfolio: React.FC = () => {
                       <div className="text-white text-center">
                         <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
                         <p className="text-gray-300 text-sm">{item.description}</p>
-                        <div className="mt-3 inline-block bg-lime-500 text-white px-3 py-1 rounded-full text-xs">
+                        <div className="mt-3 inline-block bg-brand-500 text-white px-3 py-1 rounded-full text-xs">
                           {item.category}
                         </div>
                       </div>
@@ -95,7 +85,7 @@ export const Portfolio: React.FC = () => {
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-slate-800 mb-2">{item.title}</h3>
                     <p className="text-slate-600 text-sm">{item.description}</p>
-                    <div className="mt-3 inline-block bg-lime-100 text-lime-700 px-3 py-1 rounded-full text-xs font-medium">
+                    <div className="mt-3 inline-block bg-brand-100 text-brand-700 px-3 py-1 rounded-full text-xs font-medium">
                       {item.category}
                     </div>
                   </div>
@@ -147,7 +137,7 @@ export const Portfolio: React.FC = () => {
               <div className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-3xl font-bold text-slate-800">{selectedItem.title}</h2>
-                  <div className="bg-lime-100 text-lime-700 px-4 py-2 rounded-full text-sm font-medium">
+                  <div className="bg-brand-100 text-brand-700 px-4 py-2 rounded-full text-sm font-medium">
                     {selectedItem.category}
                   </div>
                 </div>
@@ -191,9 +181,12 @@ export const Portfolio: React.FC = () => {
               Inspiré par nos réalisations ? Discutons de votre projet et créons ensemble 
               quelque chose d'exceptionnel pour votre entreprise.
             </p>
-            <button className="bg-lime-500 hover:bg-lime-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+            <Link 
+              to="/contact"
+              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
               Démarrer mon projet
-            </button>
+            </Link>
           </motion.div>
         </div>
       </section>
