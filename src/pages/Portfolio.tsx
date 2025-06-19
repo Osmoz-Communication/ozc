@@ -5,10 +5,18 @@ import { useContent } from '../context/ContentContext';
 import { Filter, X } from 'lucide-react';
 import { HeroSection } from '../components/HeroSection';
 
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  category: string;
+}
+
 export const Portfolio: React.FC = () => {
   const { portfolioItems } = useContent();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
 
   const categories = ['all', ...Array.from(new Set(portfolioItems.map(item => item.category)))];
 
@@ -33,14 +41,14 @@ export const Portfolio: React.FC = () => {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => setSelectedCategory(category || 'all')}
                 className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                   selectedCategory === category
                     ? 'bg-brand-500 text-white shadow-lg transform scale-105'
                     : 'bg-gray-100 text-slate-700 hover:bg-brand-100 hover:text-brand-700'
                 }`}
               >
-                {category === 'all' ? 'Tous les projets' : category.charAt(0).toUpperCase() + category.slice(1)}
+                {category === 'all' ? 'Tous les projets' : (category ? category.charAt(0).toUpperCase() + category.slice(1) : '')}
               </button>
             ))}
           </div>
@@ -64,7 +72,7 @@ export const Portfolio: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="group cursor-pointer"
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => setSelectedItem(item as PortfolioItem)}
                 >
                   <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
                     <img
@@ -169,21 +177,50 @@ export const Portfolio: React.FC = () => {
       </AnimatePresence>
 
       {/* CTA Section */}
-      <section className="py-20 bg-slate-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative py-20 overflow-hidden">
+        {/* Image de fond avec overlay */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+            alt="Communication visuelle professionnelle"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-600/90 via-brand-700/85 to-brand-800/90"></div>
+        </div>
+
+        {/* Éléments décoratifs */}
+        <div className="absolute inset-0">
+          <motion.div 
+            className="absolute top-20 left-20 w-4 h-4 bg-white/20 rounded-full"
+            animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-32 right-32 w-6 h-6 bg-white/15 rounded-full"
+            animate={{ x: [0, 15, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute top-1/2 left-1/4 w-2 h-2 bg-white/30 rounded-full"
+            animate={{ y: [0, -20, 0], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl font-bold mb-6">Votre Projet, Notre Prochain Chef-d'œuvre</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold mb-6 text-white">Votre projet, notre prochain chef-d'œuvre</h2>
+            <p className="text-xl text-brand-100 mb-8 max-w-3xl mx-auto">
               Inspiré par nos réalisations ? Discutons de votre projet et créons ensemble 
               quelque chose d'exceptionnel pour votre entreprise.
             </p>
             <Link 
               to="/contact"
-              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="bg-white hover:bg-gray-100 text-brand-600 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg inline-block"
             >
               Démarrer mon projet
             </Link>

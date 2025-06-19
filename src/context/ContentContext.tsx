@@ -128,26 +128,448 @@ const initialSectors: ContentItem[] = [
 ];
 
 const initialPortfolio: ContentItem[] = [
+  // Réalisations principales
   {
     id: '1',
-    title: 'Projet Hôtel Luxe',
-    description: 'Signalétique complète pour hôtel 5 étoiles',
+    title: 'Hôtel Le Coulommiers Palace',
+    description: 'Signalétique complète et enseigne lumineuse pour hôtel 4 étoiles - Coulommiers',
     image: 'https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg?auto=compress&cs=tinysrgb&w=800',
     category: 'hôtellerie'
   },
   {
     id: '2',
-    title: 'Enseigne Restaurant',
-    description: 'Enseigne lumineuse pour restaurant gastronomique',
+    title: 'Restaurant Le Brie Gourmand',
+    description: 'Enseigne lumineuse LED et vitrophanie - Meaux (77)',
     image: 'https://images.pexels.com/photos/260931/pexels-photo-260931.jpeg?auto=compress&cs=tinysrgb&w=800',
     category: 'commerce'
   },
   {
     id: '3',
-    title: 'Signalétique Industrielle',
-    description: 'Panneaux de sécurité et directionnels',
+    title: 'Zone Industrielle Provins',
+    description: 'Signalétique directionnelle et panneaux de sécurité - Provins (77)',
     image: 'https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=800',
     category: 'industrie'
+  },
+  {
+    id: '4',
+    title: 'Mairie de Coulommiers',
+    description: 'Signalétique institutionnelle et totem d\'accueil - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/8313183/pexels-photo-8313183.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'institutionnel'
+  },
+  {
+    id: '5',
+    title: 'Centre Commercial Val d\'Europe',
+    description: 'Enseignes magasins et signalétique directionnelle - Chessy (77)',
+    image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'commerce'
+  },
+  
+  // Services - Signalétique
+  {
+    id: 'sign1',
+    title: 'Cabinet Médical Seine & Santé',
+    description: 'Signalétique directionnelle et d\'information - Lagny-sur-Marne (77)',
+    image: 'https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'signalétique'
+  },
+  {
+    id: 'sign2',
+    title: 'Lycée Jean Vilar Meaux',
+    description: 'Panneaux directionnels et signalétique d\'urgence - Meaux (77)',
+    image: 'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'signalétique'
+  },
+  {
+    id: 'sign3',
+    title: 'Parc d\'Activités de Chessy',
+    description: 'Totems d\'accueil et signalétique extérieure - Chessy (77)',
+    image: 'https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'signalétique'
+  },
+  {
+    id: 'sign4',
+    title: 'Résidence Les Jardins de Brie',
+    description: 'Signalétique résidentielle et panneaux informatifs - Brie-Comte-Robert (77)',
+    image: 'https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'signalétique'
+  },
+  {
+    id: 'sign5',
+    title: 'Clinique Vétérinaire du Morin',
+    description: 'Enseigne et signalétique intérieure - Crécy-la-Chapelle (77)',
+    image: 'https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'signalétique'
+  },
+
+  // Services - Enseignes
+  {
+    id: 'enseigne1',
+    title: 'Boulangerie Artisanale du Terroir',
+    description: 'Enseigne lumineuse LED et caisson rétroéclairé - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/1070945/pexels-photo-1070945.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'enseigne'
+  },
+  {
+    id: 'enseigne2',
+    title: 'Garage Automobile Expert',
+    description: 'Enseigne totem et bandeau façade - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/13861/IMG_3803.jpg?auto=compress&cs=tinysrgb&w=800',
+    category: 'enseigne'
+  },
+  {
+    id: 'enseigne3',
+    title: 'Pharmacie de la Gare',
+    description: 'Croix LED pharmacie et enseigne drapeau - Melun (77)',
+    image: 'https://images.pexels.com/photos/48604/pexels-photo-48604.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'enseigne'
+  },
+  {
+    id: 'enseigne4',
+    title: 'Salon de Coiffure Tendance & Style',
+    description: 'Enseigne lumineuse et vitrophanie - Torcy (77)',
+    image: 'https://images.pexels.com/photos/1319460/pexels-photo-1319460.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'enseigne'
+  },
+  {
+    id: 'enseigne5',
+    title: 'Restaurant Pizzeria Bella Vista',
+    description: 'Enseigne néon et habillage vitrine - Chelles (77)',
+    image: 'https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'enseigne'
+  },
+
+  // Services - Gravure
+  {
+    id: 'gravure1',
+    title: 'Plaques Professionnelles Brie',
+    description: 'Gravure laser sur plaques aluminium - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'gravure'
+  },
+  {
+    id: 'gravure2',
+    title: 'Marquage Industriel Seine-et-Marne',
+    description: 'Gravure mécanique sur acier inoxydable - Meaux (77)',
+    image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'gravure'
+  },
+  {
+    id: 'gravure3',
+    title: 'Plaques Commémoratives Provins',
+    description: 'Gravure laser sur pierre et marbre - Provins (77)',
+    image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'gravure'
+  },
+  {
+    id: 'gravure4',
+    title: 'Étiquettes Techniques Fontainebleau',
+    description: 'Gravure sur plastique et métal - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'gravure'
+  },
+  {
+    id: 'gravure5',
+    title: 'Plaques Directionnelles Melun',
+    description: 'Gravure sur plexiglas et aluminium - Melun (77)',
+    image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'gravure'
+  },
+
+  // Services - Impression Numérique
+  {
+    id: 'impression-numerique1',
+    title: 'Bâches Publicitaires Grand Format',
+    description: 'Impression numérique jusqu\'à 5m de large - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'impression-numerique'
+  },
+  {
+    id: 'impression-numerique2',
+    title: 'Panneaux Rigides Meaux',
+    description: 'Impression sur Dibond et PVC - Meaux (77)',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'impression-numerique'
+  },
+  {
+    id: 'impression-numerique3',
+    title: 'Adhésifs Vitres Provins',
+    description: 'Impression sur film adhésif transparent - Provins (77)',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'impression-numerique'
+  },
+  {
+    id: 'impression-numerique4',
+    title: 'Roll-ups Événementiels',
+    description: 'Supports d\'exposition imprimés - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'impression-numerique'
+  },
+  {
+    id: 'impression-numerique5',
+    title: 'Kakémonos Professionnels',
+    description: 'Bannières verticales grand format - Melun (77)',
+    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'impression-numerique'
+  },
+
+  // Services - Film Solaire et Technique
+  {
+    id: 'film-solaire-technique1',
+    title: 'Protection Solaire Hôtel Brie',
+    description: 'Films anti-chaleur et UV - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'film-solaire-technique'
+  },
+  {
+    id: 'film-solaire-technique2',
+    title: 'Sécurité Vitres Centre Commercial',
+    description: 'Films anti-effraction et anti-vandalisme - Meaux (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'film-solaire-technique'
+  },
+  {
+    id: 'film-solaire-technique3',
+    title: 'Intimité Bureaux Provins',
+    description: 'Films décoratifs et one-way - Provins (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'film-solaire-technique'
+  },
+  {
+    id: 'film-solaire-technique4',
+    title: 'Protection Graffiti Fontainebleau',
+    description: 'Films anti-graffiti et protection - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'film-solaire-technique'
+  },
+  {
+    id: 'film-solaire-technique5',
+    title: 'Décoration Vitres Melun',
+    description: 'Films décoratifs et motifs - Melun (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'film-solaire-technique'
+  },
+
+  // Services - Habillage et Décor
+  {
+    id: 'habillage-decor1',
+    title: 'Habillage Véhicule Commercial',
+    description: 'Vinyle adhésif complet - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'habillage-decor'
+  },
+  {
+    id: 'habillage-decor2',
+    title: 'Décoration Murale Meaux',
+    description: 'Habillage mural et fresques - Meaux (77)',
+    image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'habillage-decor'
+  },
+  {
+    id: 'habillage-decor3',
+    title: 'Vitrine Boutique Provins',
+    description: 'Habillage de vitrine et décoration - Provins (77)',
+    image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'habillage-decor'
+  },
+  {
+    id: 'habillage-decor4',
+    title: 'Décor Événementiel Fontainebleau',
+    description: 'Décors et habillages temporaires - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'habillage-decor'
+  },
+  {
+    id: 'habillage-decor5',
+    title: 'Mobilier Sur-mesure Melun',
+    description: 'Mobilier décoratif personnalisé - Melun (77)',
+    image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'habillage-decor'
+  },
+
+  // Services - Print
+  {
+    id: 'print1',
+    title: 'Cartes de Visite Premium',
+    description: 'Impression offset haute qualité - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/3760269/pexels-photo-3760269.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'print'
+  },
+  {
+    id: 'print2',
+    title: 'Brochures Entreprises Meaux',
+    description: 'Catalogues et brochures professionnelles - Meaux (77)',
+    image: 'https://images.pexels.com/photos/3760269/pexels-photo-3760269.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'print'
+  },
+  {
+    id: 'print3',
+    title: 'Affiches Événementielles Provins',
+    description: 'Affiches et posters grand format - Provins (77)',
+    image: 'https://images.pexels.com/photos/3760269/pexels-photo-3760269.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'print'
+  },
+  {
+    id: 'print4',
+    title: 'Papeterie Corporate Fontainebleau',
+    description: 'Papeterie d\'entreprise complète - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/3760269/pexels-photo-3760269.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'print'
+  },
+  {
+    id: 'print5',
+    title: 'PLV Carton Melun',
+    description: 'Supports de vente carton - Melun (77)',
+    image: 'https://images.pexels.com/photos/3760269/pexels-photo-3760269.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'print'
+  },
+
+  // Services - Objet
+  {
+    id: 'objet1',
+    title: 'Textiles Personnalisés Brie',
+    description: 'T-shirts et polos brodés - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'objet'
+  },
+  {
+    id: 'objet2',
+    title: 'Objets High-Tech Meaux',
+    description: 'Clés USB et powerbanks gravés - Meaux (77)',
+    image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'objet'
+  },
+  {
+    id: 'objet3',
+    title: 'Bagagerie Provins',
+    description: 'Sacs et bagagerie personnalisés - Provins (77)',
+    image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'objet'
+  },
+  {
+    id: 'objet4',
+    title: 'Cadeaux d\'Affaires Fontainebleau',
+    description: 'Objets promotionnels premium - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'objet'
+  },
+  {
+    id: 'objet5',
+    title: 'Packaging Sur-mesure Melun',
+    description: 'Emballages personnalisés - Melun (77)',
+    image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'objet'
+  },
+
+  // Secteurs - Tertiaire
+  {
+    id: 'tertiaire1',
+    title: 'Centre d\'Affaires Brie',
+    description: 'Signalétique directionnelle corporate - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'tertiaire'
+  },
+  {
+    id: 'tertiaire2',
+    title: 'Administration Meaux',
+    description: 'Plaques de porte et totems - Meaux (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'tertiaire'
+  },
+  {
+    id: 'tertiaire3',
+    title: 'Bureaux Provins',
+    description: 'Signalétique intérieure professionnelle - Provins (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'tertiaire'
+  },
+  {
+    id: 'tertiaire4',
+    title: 'Cabinet Conseil Fontainebleau',
+    description: 'Enseignes de façade élégantes - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'tertiaire'
+  },
+  {
+    id: 'tertiaire5',
+    title: 'Agence Immobilière Melun',
+    description: 'Vitrophanie et signalétique - Melun (77)',
+    image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'tertiaire'
+  },
+
+  // Secteurs - Événementiel
+  {
+    id: 'evenementiel1',
+    title: 'Festival Jazz en Brie',
+    description: 'Signalétique événementielle complète - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'evenementiel'
+  },
+  {
+    id: 'evenementiel2',
+    title: 'Salon Professionnel Meaux',
+    description: 'Stands et supports d\'exposition - Meaux (77)',
+    image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'evenementiel'
+  },
+  {
+    id: 'evenementiel3',
+    title: 'Congrès Provins',
+    description: 'Signalétique directionnelle temporaire - Provins (77)',
+    image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'evenementiel'
+  },
+  {
+    id: 'evenementiel4',
+    title: 'Mariage Château Fontainebleau',
+    description: 'Décoration événementielle - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'evenementiel'
+  },
+  {
+    id: 'evenementiel5',
+    title: 'Événement Sportif Melun',
+    description: 'Banderoles et kakémonos - Melun (77)',
+    image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'evenementiel'
+  },
+
+  // Secteurs - Musée et Parc à Thème
+  {
+    id: 'musee-parc1',
+    title: 'Musée de la Brie',
+    description: 'Signalétique muséographique - Coulommiers (77)',
+    image: 'https://images.pexels.com/photos/1927639/pexels-photo-1927639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'musee-parc'
+  },
+  {
+    id: 'musee-parc2',
+    title: 'Parc d\'Attractions Meaux',
+    description: 'Signalétique thématique et directionnelle - Meaux (77)',
+    image: 'https://images.pexels.com/photos/1927639/pexels-photo-1927639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'musee-parc'
+  },
+  {
+    id: 'musee-parc3',
+    title: 'Site Historique Provins',
+    description: 'Panneaux pédagogiques et informatifs - Provins (77)',
+    image: 'https://images.pexels.com/photos/1927639/pexels-photo-1927639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'musee-parc'
+  },
+  {
+    id: 'musee-parc4',
+    title: 'Château Fontainebleau',
+    description: 'Signalétique patrimoniale - Fontainebleau (77)',
+    image: 'https://images.pexels.com/photos/1927639/pexels-photo-1927639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'musee-parc'
+  },
+  {
+    id: 'musee-parc5',
+    title: 'Parc Naturel Melun',
+    description: 'Signalétique environnementale - Melun (77)',
+    image: 'https://images.pexels.com/photos/1927639/pexels-photo-1927639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    category: 'musee-parc'
   }
 ];
 

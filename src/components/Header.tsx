@@ -216,21 +216,10 @@ export const Header: React.FC = () => {
               </div>
             </nav>
 
-            {/* Mobile Contact Button */}
-            <div className="flex items-center space-x-2 lg:hidden">
-              <a
-                href="tel:0184190104"
-                className="bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
-              >
-                <Phone size={16} className="inline mr-1" />
-                <span className="hidden sm:inline">Appeler</span>
-              </a>
-            </div>
-
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-slate-700 hover:text-brand-500 ml-2"
+              className="lg:hidden p-2 rounded-md text-slate-700 hover:text-brand-500"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

@@ -3,6 +3,7 @@ import { useParams, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Users, TrendingUp, MapPin, Phone } from 'lucide-react';
 import { HeroSection } from '../components/HeroSection';
+import { PortfolioGallery } from '../components/PortfolioGallery';
 
 // Base template structure that can be easily managed from admin and stored in database
 interface SectorTemplate {
@@ -452,6 +453,13 @@ export const SectorDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Portfolio Gallery */}
+      <PortfolioGallery 
+        category={template.slug}
+        title={`Nos réalisations dans le secteur ${template.title}`}
+        subtitle={`Découvrez nos projets ${template.title.toLowerCase()} en Seine-et-Marne`}
+      />
     </div>
   );
 }; 

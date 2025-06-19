@@ -3,6 +3,7 @@ import { useParams, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Clock, Euro, Shield, Phone, Mail } from 'lucide-react';
 import { HeroSection } from '../components/HeroSection';
+import { PortfolioGallery } from '../components/PortfolioGallery';
 
 // Base template structure that can be easily managed from admin and stored in database
 interface PageTemplate {
@@ -493,26 +494,7 @@ export const ServiceDetail: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Gallery */}
-            {template.content.gallery && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                <h3 className="text-2xl font-bold text-slate-800 mb-6">Galerie</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {template.content.gallery.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`Réalisation ${template.title}`}
-                      className="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
+
           </div>
 
           {/* Sidebar */}
@@ -625,6 +607,13 @@ export const ServiceDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Portfolio Gallery */}
+      <PortfolioGallery 
+        category={template.slug}
+        title={`Nos réalisations en ${template.title}`}
+        subtitle={`Découvrez nos projets ${template.title.toLowerCase()} en Seine-et-Marne`}
+      />
     </div>
   );
 }; 

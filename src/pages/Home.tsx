@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { FaPalette, FaRocket, FaCertificate, FaUsers, FaEye, FaBullhorn, FaQuoteLeft } from 'react-icons/fa';
+import { FaPalette, FaRocket, FaCertificate, FaUsers, FaEye, FaBullhorn, FaQuoteLeft, FaMapSigns, FaLightbulb, FaCog, FaPrint, FaShieldAlt, FaBrush } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
+import { AnimatedButton } from '../components/AnimatedButton';
 
 const logos = [
   '/logos/logo_aviva.png',
@@ -25,20 +26,84 @@ export const Home: React.FC = () => {
   const { slides, services, portfolioItems } = useContent();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentPortfolioSlide, setCurrentPortfolioSlide] = useState(0);
+  const [sliderTransitioning, setSliderTransitioning] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    }
+    if (isRightSwipe) {
+      prevSlide();
+    }
+  };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
+    if (!isHovered) {
+      const timer = setInterval(() => {
+        nextSlide();
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [slides.length, isHovered]);
+
+  // Auto-défilement du carrousel portfolio avec boucle infinie
+  useEffect(() => {
+    const portfolioTimer = setInterval(() => {
+      nextPortfolioSlide();
+    }, 3000);
+    return () => clearInterval(portfolioTimer);
+  }, []);
 
   const nextSlide = () => {
+    if (sliderTransitioning) return;
+    setSliderTransitioning(true);
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setTimeout(() => setSliderTransitioning(false), 1000);
   };
 
   const prevSlide = () => {
+    if (sliderTransitioning) return;
+    setSliderTransitioning(true);
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setTimeout(() => setSliderTransitioning(false), 1000);
+  };
+
+  const nextPortfolioSlide = () => {
+    setCurrentPortfolioSlide((prev) => {
+      if (prev >= 4) {
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
+
+  const prevPortfolioSlide = () => {
+    setCurrentPortfolioSlide((prev) => {
+      if (prev <= 0) {
+        return 4;
+      }
+      return prev - 1;
+    });
   };
 
   const features = [
@@ -100,20 +165,37 @@ export const Home: React.FC = () => {
 
       {/* Hero Slider */}
       <section 
-        className="relative h-[50vh] md:h-[55vh] overflow-hidden group"
+        className="relative h-[58vh] md:h-[55vh] overflow-hidden group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
-        <AnimatePresence mode="wait">
-          {slides.map((slide, index) => (
-            index === currentSlide && (
+        <div className="relative w-full h-full">
+          {/* Slides avec défilement infini sans blancs */}
+          {slides.map((slide, index) => {
+            let position = index - currentSlide;
+            if (position < 0) position += slides.length;
+            
+            return (
               <motion.div
-                key={slide.id}
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100 }}
-                transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                key={`${slide.id}-${currentSlide}`}
                 className="absolute inset-0"
+                initial={{ x: `${position * 100}%`, opacity: position === 0 ? 1 : 0 }}
+                animate={{
+                  x: `${position * 100}%`,
+                  opacity: position === 0 ? 1 : 0
+                }}
+                transition={{ 
+                  duration: sliderTransitioning ? 1.0 : 0.8, 
+                  ease: [0.25, 0.1, 0.25, 1], // Easing très doux et naturel
+                  opacity: { duration: 0.6 }
+                }}
+                style={{
+                  left: `${position * 100}%`,
+                  width: '100%'
+                }}
               >
                 <div className="absolute inset-0">
                   <img
@@ -124,63 +206,85 @@ export const Home: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
                 </div>
 
-                <div className="relative h-full flex items-center">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <div className="relative h-full flex items-start sm:items-center pt-8 sm:pt-0">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16 sm:pb-0">
                     <div className="max-w-3xl">
                       <motion.p
                         initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                        animate={{ 
+                          opacity: position === 0 ? 1 : 0, 
+                          y: position === 0 ? 0 : 30 
+                        }}
+                        transition={{ 
+                          duration: 0.7, 
+                          delay: position === 0 ? 0.3 : 0,
+                          ease: "easeOut"
+                        }}
                         className="text-brand-300 text-lg font-medium mb-4"
                       >
                         {slide.subtitle}
                       </motion.p>
                       <motion.h1
                         initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
+                        animate={{ 
+                          opacity: position === 0 ? 1 : 0, 
+                          y: position === 0 ? 0 : 50 
+                        }}
+                        transition={{ 
+                          duration: 0.8, 
+                          delay: position === 0 ? 0.4 : 0,
+                          ease: "easeOut"
+                        }}
                         className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
                       >
                         {slide.title}
                       </motion.h1>
                       <motion.p
                         initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 }}
+                        animate={{ 
+                          opacity: position === 0 ? 1 : 0, 
+                          y: position === 0 ? 0 : 30 
+                        }}
+                        transition={{ 
+                          duration: 0.7, 
+                          delay: position === 0 ? 0.6 : 0,
+                          ease: "easeOut"
+                        }}
                         className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-2xl leading-relaxed"
                       >
                         {slide.description}
                       </motion.p>
                       <motion.div
                         initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.7 }}
+                        animate={{ 
+                          opacity: position === 0 ? 1 : 0, 
+                          y: position === 0 ? 0 : 30 
+                        }}
+                        transition={{ 
+                          duration: 0.7, 
+                          delay: position === 0 ? 0.8 : 0,
+                          ease: "easeOut"
+                        }}
                         className="flex flex-col sm:flex-row gap-4"
                       >
-                        <Link
-                          to={slide.buttonLink}
-                          className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl group inline-flex items-center justify-center"
-                        >
+                        <AnimatedButton to={slide.buttonLink} variant="primary" size="md" className="sm:size-lg">
                           {slide.buttonText}
-                          <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                        <Link
-                          to="/contact"
-                          className="border-2 border-white text-white hover:bg-white hover:text-slate-800 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center"
-                        >
+                          <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+                        </AnimatedButton>
+                        <AnimatedButton to="/contact" variant="outline" size="md" className="sm:size-lg border-white text-white hover:bg-white hover:text-slate-800">
                           Devis gratuit 24h
-                        </Link>
+                        </AnimatedButton>
                       </motion.div>
                     </div>
                   </div>
                 </div>
               </motion.div>
-            )
-          ))}
-        </AnimatePresence>
+            );
+          })}
+        </div>
 
         {/* Navigation dots */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
           {slides.map((_, index) => (
             <button
               key={index}
@@ -193,13 +297,13 @@ export const Home: React.FC = () => {
           ))}
         </div>
 
-        {/* Navigation arrows - only visible on hover */}
+        {/* Navigation arrows - only visible on hover and desktop */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-300"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-300 hidden md:block"
           aria-label="Slide précédent"
         >
           <ChevronLeft size={24} />
@@ -209,7 +313,7 @@ export const Home: React.FC = () => {
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-300"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-300 hidden md:block"
           aria-label="Slide suivant"
         >
           <ChevronRight size={24} />
@@ -217,23 +321,82 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Introduction SEO Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 relative">
+        {/* Fond dégradé subtil */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-brand-50/20"></div>
+        
+        {/* Éléments décoratifs continus */}
+        <div className="absolute inset-0">
+          {/* Formes étendues qui se prolongent dans les sections suivantes */}
+          <motion.div 
+            className="absolute top-0 right-0 w-96 h-[130%] bg-gradient-to-br from-brand-100/25 to-transparent rounded-full -translate-y-1/6 translate-x-24"
+            animate={{ 
+              scale: [1, 1.08, 1], 
+              opacity: [0.4, 0.6, 0.4]
+            }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-0 left-0 w-80 h-[140%] bg-gradient-to-tr from-brand-200/18 to-transparent rounded-full translate-y-1/5 -translate-x-16"
+            animate={{ 
+              scale: [1, 1.12, 1],
+              rotate: [0, 120, 240]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          />
+          
+          {/* Lignes connectrices subtiles */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            className="absolute top-1/3 left-1/4 w-32 h-px bg-gradient-to-r from-brand-200/40 to-transparent"
+            animate={{ 
+              scaleX: [0.5, 1, 0.5],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/3 right-1/4 w-24 h-px bg-gradient-to-l from-brand-300/40 to-transparent"
+            animate={{ 
+              scaleX: [0.8, 1, 0.8],
+              opacity: [0.2, 0.5, 0.2]
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-6">
-              Votre Agence de Communication Visuelle à Coulommiers (77)
-            </h2>
-            <p className="text-xl text-slate-600 leading-relaxed mb-8">
+            <motion.h2 
+              className="text-3xl md:text-4xl font-bold text-slate-800 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Votre agence de <motion.span 
+                className="text-brand-600"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                communication visuelle
+              </motion.span> à Coulommiers (77)
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-slate-600 leading-relaxed mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               <strong>Osmoz Communication</strong> est votre partenaire de confiance en Seine-et-Marne pour tous vos projets de 
               <strong> signalétique</strong>, <strong>enseignes lumineuses</strong>, <strong>impression grand format</strong> et 
               <strong> gravure laser</strong>. Basés à Coulommiers, nous intervenons dans tout le département 77 
               avec un service de qualité et des délais respectés.
-            </p>
+            </motion.p>
           </motion.div>
         </div>
       </section>
@@ -246,19 +409,53 @@ export const Home: React.FC = () => {
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
+              className="group"
             >
-              <div className="relative">
-                <img
+              <motion.div 
+                className="relative"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.img
                   src="/images/ozc-signaletique.webp"
                   alt="Signalétique professionnelle Osmoz Communication - Panneaux directionnels Seine-et-Marne"
                   className="w-full h-96 object-contain rounded-2xl shadow-2xl bg-white"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-600/20 to-transparent rounded-2xl"></div>
-                <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-lg p-4">
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-t from-brand-600/20 to-transparent rounded-2xl"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                />
+                <motion.div 
+                  className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-lg p-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    backgroundColor: "rgba(255, 255, 255, 0.95)"
+                  }}
+                >
                   <p className="text-sm font-semibold text-slate-800">Signalétique directionnelle</p>
                   <p className="text-xs text-slate-600">Installation récente - Coulommiers 77</p>
-                </div>
-              </div>
+                </motion.div>
+                
+                {/* Effet de brillance au hover */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut"
+                  }}
+                />
+              </motion.div>
             </motion.div>
 
             <motion.div
@@ -267,11 +464,11 @@ export const Home: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="space-y-6"
             >
-              <div className="inline-block bg-brand-100 text-brand-700 px-4 py-2 rounded-full text-sm font-medium">
-                Notre Expertise Signalétique
+                            <div className="inline-block bg-brand-100 text-brand-700 px-4 py-2 rounded-full text-sm font-medium">
+                Notre expertise signalétique
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-800 leading-tight">
-                Signalétique sur-mesure en Seine-et-Marne
+                <span className="text-brand-600">Signalétique</span> sur-mesure en Seine-et-Marne
               </h2>
               <p className="text-lg text-slate-600 leading-relaxed">
                 Spécialistes de la <strong>signalétique extérieure et intérieure</strong>, nous concevons et réalisons 
@@ -311,28 +508,17 @@ export const Home: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  to="/services/signaletique"
-                  className="inline-flex items-center bg-brand-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-brand-600 transform hover:scale-105"
-                >
+                <AnimatedButton to="/services/signaletique" variant="primary">
                   Découvrir nos solutions signalétique
                   <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-                <a
-                  href="https://ozc-signaletique.fr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-slate-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-slate-900 transform hover:scale-105"
-                >
+                </AnimatedButton>
+                <AnimatedButton href="https://ozc-signaletique.fr" variant="secondary">
                   OZC Signalétique
                   <ArrowRight className="ml-2 w-4 h-4" />
-                </a>
-                <Link
-                  to="/contact"
-                  className="inline-flex items-center border-2 border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300"
-                >
+                </AnimatedButton>
+                <AnimatedButton to="/contact" variant="outline">
                   Devis gratuit
-                </Link>
+                </AnimatedButton>
               </div>
             </motion.div>
           </div>
@@ -340,21 +526,107 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-slate-50 to-white relative overflow-hidden">
+      <section className="py-20 relative">
+        {/* Background moderne avec dégradés et formes */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-brand-50/30"></div>
+        
+        {/* Bulles décoratives subtiles et légères */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-100 rounded-full -translate-y-48 translate-x-48 opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-50 rounded-full translate-y-32 -translate-x-32"></div>
+          {/* Petites bulles flottantes dispersées */}
+          <motion.div className="absolute top-20 left-16 w-2 h-2 bg-brand-400/50 rounded-full"
+            animate={{ y: [0, -12, 0], opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div className="absolute top-32 right-24 w-3 h-3 bg-brand-300/40 rounded-full"
+            animate={{ x: [0, 10, 0], scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          <motion.div className="absolute bottom-40 left-32 w-1.5 h-1.5 bg-brand-400/60 rounded-full"
+            animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+          <motion.div className="absolute bottom-20 right-16 w-2.5 h-2.5 bg-brand-300/35 rounded-full"
+            animate={{ y: [0, 8, 0], x: [0, -5, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          />
+          <motion.div className="absolute top-1/2 left-20 w-1 h-1 bg-brand-400/70 rounded-full"
+            animate={{ scale: [1, 2, 1], opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          />
+          <motion.div className="absolute top-3/4 right-32 w-2 h-2 bg-brand-300/45 rounded-full"
+            animate={{ x: [0, -8, 0], y: [0, -6, 0], opacity: [0.2, 0.6, 0.2] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+          />
+          {/* Bulles principales qui flottent */}
+          <motion.div 
+            className="absolute top-20 right-20 w-32 h-32 bg-brand-100/20 rounded-full"
+            animate={{
+              y: [0, -15, 0],
+              scale: [1, 1.1, 1],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div 
+            className="absolute bottom-32 left-16 w-24 h-24 bg-emerald-100/15 rounded-full"
+            animate={{
+              y: [0, 20, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+          />
+          <motion.div 
+            className="absolute top-1/2 right-1/4 w-16 h-16 bg-teal-100/25 rounded-full"
+            animate={{
+              x: [0, 10, 0],
+              y: [0, -10, 0],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 4
+            }}
+          />
+          
+          {/* Petites bulles flottantes */}
+          <motion.div className="absolute top-1/4 left-1/3 w-3 h-3 bg-brand-300/40 rounded-full"
+            animate={{ y: [0, -15, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-emerald-300/50 rounded-full"
+            animate={{ x: [0, 12, 0], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          <motion.div className="absolute top-3/4 left-1/5 w-4 h-4 bg-teal-200/30 rounded-full"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
+            <div className="inline-block bg-brand-100 text-brand-700 px-6 py-3 rounded-full text-sm font-medium mb-6">
+              Nos atouts
+            </div>
             <h2 className="text-4xl font-bold text-slate-800 mb-6">
-              Pourquoi Choisir Osmoz Communication ?
+              Pourquoi choisir <span className="text-brand-600">Osmoz Communication</span> ?
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
               Une expertise reconnue en Seine-et-Marne pour votre communication visuelle
@@ -368,13 +640,31 @@ export const Home: React.FC = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center group"
+                className="group"
               >
-                <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-500 transition-all duration-300 transform group-hover:scale-110">
-                  <feature.icon className="w-10 h-10 text-brand-500 group-hover:text-white transition-colors" />
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-full">
+                  {/* Effet de brillance au hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/5 to-brand-50/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Icône avec effet moderne */}
+                  <motion.div 
+                    className="relative w-20 h-20 bg-gradient-to-br from-brand-100 to-brand-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:from-brand-500 group-hover:to-brand-600 transition-all duration-500"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <feature.icon className="w-10 h-10 text-brand-500 group-hover:text-white transition-colors duration-500" />
+                    {/* Effet de lueur */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-brand-400/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </motion.div>
+                  
+                  <h3 className="text-xl font-semibold text-slate-800 mb-4 group-hover:text-brand-700 transition-colors duration-300">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors duration-300">
+                    {feature.description}
+                  </p>
+                  
+
                 </div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-4">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -382,7 +672,21 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Services Section with SEO content */}
-      <section className="py-20 bg-white relative overflow-hidden">
+      <section className="py-20 bg-white relative">
+        {/* Éléments décoratifs pour les services */}
+        <div className="absolute inset-0">
+          <motion.div 
+            className="absolute top-20 left-20 w-2 h-2 bg-brand-400/60 rounded-full"
+            animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-32 right-32 w-3 h-3 bg-brand-300/50 rounded-full"
+            animate={{ x: [0, 15, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -391,7 +695,7 @@ export const Home: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-slate-800 mb-6">
-              Nos Services de Communication Visuelle en Seine-et-Marne
+              Nos <span className="text-brand-600">services de communication visuelle</span> en Seine-et-Marne
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
               De la conception à l'installation, découvrez notre gamme complète de services professionnels
@@ -399,28 +703,106 @@ export const Home: React.FC = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.slice(0, 6).map((service, index) => (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all duration-300 group hover:scale-105"
-              >
-                <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-500 transition-colors">
-                  <FaBullhorn className="w-8 h-8 text-brand-500 group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-4">{service.title}</h3>
-                <p className="text-slate-600 mb-6 leading-relaxed">{service.description}</p>
-                <Link
-                  to="/services"
-                  className="inline-flex items-center text-brand-600 hover:text-brand-700 font-medium transition-colors group"
+            {services.slice(0, 6).map((service, index) => {
+              // Définir les icônes spécifiques pour chaque service
+                             const getServiceIcon = (title: string) => {
+                 switch(title) {
+                   case 'Signalétique': return FaMapSigns;
+                   case 'Enseigne': return FaLightbulb;
+                   case 'Gravure': return FaCog;
+                   case 'Impression Numérique': return FaPrint;
+                   case 'Film Solaire et Technique': return FaShieldAlt;
+                   case 'Habillage et Décor': return FaBrush;
+                   default: return FaBullhorn;
+                 }
+               };
+              
+              const ServiceIcon = getServiceIcon(service.title);
+              
+              return (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    y: -8,
+                    transition: { duration: 0.2 }
+                  }}
+                  className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
                 >
-                  Découvrir ce service
-                  <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </motion.div>
-            ))}
+                  {/* Effet de brillance séquentiel */}
+                  <motion.div
+                    className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0"
+                    animate={{ 
+                      x: ['-100%', '100%'],
+                      opacity: [0, 0.7, 0]
+                    }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      ease: "easeInOut",
+                      delay: index * 0.5 // Délai séquentiel basé sur l'index
+                    }}
+                  />
+                  
+                  <motion.div 
+                    className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-500 transition-all duration-300 relative z-10"
+                    whileHover={{ 
+                      scale: 1.1, 
+                      rotate: 5,
+                      transition: { duration: 0.2 }
+                    }}
+                  >
+                    <ServiceIcon className="w-8 h-8 text-brand-500 group-hover:text-white transition-colors duration-300" />
+                  </motion.div>
+                  
+                  <motion.h3 
+                    className="text-xl font-semibold text-slate-800 mb-4 relative z-10"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
+                  >
+                    {service.title}
+                  </motion.h3>
+                  
+                  <motion.p 
+                    className="text-slate-600 mb-6 leading-relaxed flex-grow relative z-10"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: index * 0.1 + 0.4 }}
+                  >
+                    {service.description}
+                  </motion.p>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.5 }}
+                    className="mt-auto relative z-10"
+                  >
+                    <Link
+                      to="/services"
+                      className="inline-flex items-center text-brand-600 hover:text-brand-700 font-medium transition-all duration-300 group-hover:translate-x-1"
+                    >
+                      Découvrir ce service
+                      <motion.div
+                        whileHover={{ x: 3 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ArrowRight size={16} className="ml-2" />
+                      </motion.div>
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">
@@ -435,22 +817,37 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Stats Section with local SEO */}
-      <section className="py-20 bg-brand-500 relative overflow-hidden">
+      <section className="py-20 relative overflow-hidden">
+        {/* Image de fond */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080"
+            alt="Osmoz Communication - Arrière-plan section statistiques"
+            className="w-full h-full object-cover"
+          />
+          {/* Overlay comme le slider */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
+        </div>
+        
+        {/* Éléments décoratifs */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-3 h-3 bg-white/20 rounded-full"></div>
           <div className="absolute bottom-1/4 right-1/3 w-4 h-4 bg-white/15 rounded-full"></div>
           <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-white/25 rounded-full"></div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
+            <div className="inline-block bg-brand-100 text-brand-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              Notre performance
+            </div>
             <h2 className="text-4xl font-bold text-white mb-6">
-              Osmoz Communication en Chiffres
+              <span className="text-brand-400">Osmoz Communication</span> en chiffres
             </h2>
             <p className="text-xl text-white/90 max-w-3xl mx-auto">
               La confiance de nos clients en Seine-et-Marne depuis 2014
@@ -461,17 +858,69 @@ export const Home: React.FC = () => {
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center text-white"
+                initial={{ opacity: 0, scale: 0.3, y: 50 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: index * 0.15,
+                  type: "spring",
+                  stiffness: 120
+                }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  y: -5,
+                  transition: { duration: 0.2 }
+                }}
+                className="text-center text-white group"
               >
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <motion.div 
+                  className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-all duration-300 relative"
+                  whileHover={{ 
+                    rotate: [0, -10, 10, -10, 0],
+                    transition: { duration: 0.6 }
+                  }}
+                >
                   <stat.icon className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-4xl lg:text-5xl font-bold mb-2">{stat.number}</div>
-                <div className="text-white/90 font-medium">{stat.label}</div>
-                <div className="text-white/70 text-sm">{stat.sublabel}</div>
+                  
+                  {/* Cercle d'effet au hover */}
+                  <motion.div
+                    className="absolute inset-0 border-2 border-white/40 rounded-full"
+                    initial={{ scale: 0, opacity: 0 }}
+                    whileHover={{ 
+                      scale: 1.3, 
+                      opacity: [0, 0.5, 0],
+                      transition: { duration: 0.6 }
+                    }}
+                  />
+                </motion.div>
+                
+                <motion.div 
+                  className="text-4xl lg:text-5xl font-bold mb-2 drop-shadow-lg"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: index * 0.15 + 0.3 }}
+                  whileHover={{ scale: 1.1 }}
+                >
+                  {stat.number}
+                </motion.div>
+                
+                <motion.div 
+                  className="text-white/90 font-medium drop-shadow-md"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.15 + 0.4 }}
+                >
+                  {stat.label}
+                </motion.div>
+                
+                <motion.div 
+                  className="text-white/70 text-sm drop-shadow-md"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.15 + 0.5 }}
+                >
+                  {stat.sublabel}
+                </motion.div>
               </motion.div>
             ))}
           </div>
@@ -479,8 +928,22 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-gradient-to-b from-white to-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
+        {/* Éléments décoratifs testimonials */}
+        <div className="absolute inset-0">
+          <motion.div 
+            className="absolute top-24 left-24 w-3 h-3 bg-brand-300/50 rounded-full"
+            animate={{ scale: [1, 1.6, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-16 right-24 w-2 h-2 bg-brand-400/60 rounded-full"
+            animate={{ x: [0, 10, 0], y: [0, -5, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -488,7 +951,7 @@ export const Home: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-slate-800 mb-6">
-              Ils Nous Font Confiance en Seine-et-Marne
+              Ils nous font <span className="text-brand-600">confiance</span> en Seine-et-Marne
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
               Découvrez les témoignages de nos clients satisfaits dans le 77
@@ -520,8 +983,22 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Portfolio Preview with local SEO */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-white relative">
+        {/* Éléments décoratifs portfolio */}
+        <div className="absolute inset-0">
+          <motion.div 
+            className="absolute top-16 right-16 w-4 h-4 bg-brand-200/60 rounded-full"
+            animate={{ rotate: [0, 360], scale: [1, 1.3, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-20 left-20 w-6 h-6 bg-brand-100/40 rounded-full"
+            animate={{ y: [0, -20, 0], opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -529,47 +1006,101 @@ export const Home: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-slate-800 mb-6">
-              Nos Réalisations en Seine-et-Marne
+              Nos <span className="text-brand-600">réalisations</span> en Seine-et-Marne
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
               Découvrez nos projets de signalétique et communication visuelle dans le 77
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {portfolioItems.slice(0, 3).map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="group cursor-pointer"
+          {/* Carrousel Portfolio */}
+          <div className="relative max-w-6xl mx-auto">
+            {/* Flèches de navigation discrètes */}
+            <button
+              onClick={prevPortfolioSlide}
+              className="absolute -left-12 lg:-left-16 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-slate-600 hover:text-slate-800 p-2 lg:p-3 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-105 z-10 hidden md:block border border-gray-200/50"
+              aria-label="Réalisation précédente"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={nextPortfolioSlide}
+              className="absolute -right-12 lg:-right-16 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-slate-600 hover:text-slate-800 p-2 lg:p-3 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-105 z-10 hidden md:block border border-gray-200/50"
+              aria-label="Réalisation suivante"
+            >
+              <ChevronRight size={18} />
+            </button>
+            
+            <div className="overflow-hidden rounded-2xl">
+              <motion.div 
+                className="flex"
+                animate={{ 
+                  x: `${-currentPortfolioSlide * (100 / 3)}%` 
+                }}
+                transition={{ 
+                  duration: 0.6,
+                  ease: "easeInOut" 
+                }}
               >
-                <div className="relative overflow-hidden rounded-xl shadow-lg">
-                  <img
-                    src={item.image}
-                    alt={`${item.title} - Réalisation Osmoz Communication`}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-600/80 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-                    <div className="text-white text-center">
-                      <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                      <p className="text-gray-300">{item.description}</p>
-                    </div>
-                  </div>
-                </div>
+                {/* Créer un carrousel infini avec duplication */}
+                {portfolioItems.slice(0, 5).concat(portfolioItems.slice(0, 5)).map((item, index) => {
+                  const isOriginal = index < 5;
+                  return (
+                    <Link
+                      key={`portfolio-${isOriginal ? index : `${index}-duplicate`}`}
+                      to="/portfolio"
+                      className="w-1/3 flex-shrink-0 px-3 group cursor-pointer"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: (index % 3) * 0.1 }}
+                      >
+                        <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
+                          <img
+                            src={item.image}
+                            alt={`${item.title} - Réalisation Osmoz Communication`}
+                            className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+                            <div className="text-white text-center">
+                              <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                              <p className="text-gray-300">{item.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  );
+                })}
               </motion.div>
-            ))}
+            </div>
+            
+            {/* Indicateurs */}
+            <div className="flex justify-center mt-8 space-x-2">
+              {Array.from({ length: 5 }, (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPortfolioSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentPortfolioSlide ? 'bg-brand-500 w-6' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Aller à la réalisation ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="text-center mt-12">
-            <Link
-              to="/portfolio"
-              className="bg-slate-800 hover:bg-slate-900 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
+          <motion.div 
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <AnimatedButton to="/portfolio" variant="secondary" size="lg">
               Voir toutes nos réalisations
-            </Link>
-          </div>
+            </AnimatedButton>
+          </motion.div>
         </div>
       </section>
 
@@ -619,12 +1150,91 @@ export const Home: React.FC = () => {
 
       {/* CTA Section with local SEO */}
       <section className="relative bg-brand-500 overflow-hidden">
+        {/* Fond moderne avec couleurs brand */}
         <div className="absolute inset-0">
-          <div className="absolute -top-20 -left-20 w-80 h-80 bg-brand-400 rounded-full opacity-60"></div>
-          <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-brand-600 rounded-full opacity-50"></div>
-          <div className="absolute top-1/4 right-1/4 w-12 h-12 bg-white/20 rounded-full"></div>
-          <div className="absolute bottom-1/3 left-1/4 w-8 h-8 bg-white/15 rounded-full"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-400 transform rotate-45 translate-x-16 -translate-y-16 opacity-40"></div>
+          {/* Dégradé de base avec couleurs brand */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700"
+            animate={{
+              background: [
+                "linear-gradient(135deg, #98c21d 0%, #7fb069 50%, #65a30d 100%)",
+                "linear-gradient(225deg, #7fb069 0%, #98c21d 50%, #65a30d 100%)",
+                "linear-gradient(135deg, #98c21d 0%, #7fb069 50%, #65a30d 100%)"
+              ]
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          {/* Formes géométriques subtiles */}
+          <motion.div 
+            className="absolute -top-20 -right-20 w-64 h-64 bg-brand-400/20 rounded-full"
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div 
+            className="absolute -bottom-16 -left-16 w-48 h-48 bg-brand-300/15 rounded-full"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.15, 0.3, 0.15]
+            }}
+            transition={{
+              duration: 18,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          {/* Points décoratifs */}
+          {Array.from({ length: 8 }, (_, i) => (
+            <motion.div
+              key={`dot-${i}`}
+              className="absolute w-2 h-2 bg-white/30 rounded-full"
+              style={{
+                left: `${20 + (i * 10) % 60}%`,
+                top: `${20 + (i * 8) % 60}%`
+              }}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{
+                duration: 4 + i,
+                repeat: Infinity,
+                delay: i * 0.5,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+          
+          {/* Effet de brillance subtil */}
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(45deg, 
+                transparent 40%, 
+                rgba(255,255,255,0.1) 50%, 
+                transparent 60%)`
+            }}
+            animate={{
+              x: ['-100%', '100%']
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -676,26 +1286,7 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative bg-slate-800 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center"
-            >
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-1 h-12 bg-brand-500 mr-4"></div>
-                <p className="text-white text-lg italic max-w-4xl">
-                  "La communication visuelle, c'est notre passion. Votre satisfaction, notre priorité."
-                </p>
-              </div>
-              <p className="text-white/70 text-sm">
-                Osmoz Communication - 3B Boulevard de la Marne, 77120 Coulommiers - Seine-et-Marne
-              </p>
-            </motion.div>
-          </div>
-        </div>
+
       </section>
     </div>
   );
