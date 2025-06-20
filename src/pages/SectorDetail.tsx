@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Users, TrendingUp, MapPin, Phone } from 'lucide-react';
@@ -109,7 +109,12 @@ const sectorTemplates: Record<string, SectorTemplate> = {
         { label: 'Sites industriels', value: '80+' },
         { label: 'Conformité normes', value: '100%' },
         { label: 'Durabilité garantie', value: '10 ans' }
-      ]
+      ],
+      testimonial: {
+        text: 'La signalétique de sécurité installée par Osmoz Communication respecte parfaitement nos exigences industrielles. Installation rapide et matériaux de qualité professionnelle.',
+        author: 'Jean-Pierre Martin',
+        company: 'Responsable HSE - Usine Ineo Equans'
+      }
     },
     seo: {
       metaTitle: 'Signalétique industrielle Coulommiers - Sécurité et marquage',
@@ -144,7 +149,12 @@ const sectorTemplates: Record<string, SectorTemplate> = {
         { label: 'Entreprises équipées', value: '120+' },
         { label: 'Projets tertiaires', value: '200+' },
         { label: 'Délai moyen', value: '7 jours' }
-      ]
+      ],
+      testimonial: {
+        text: 'Osmoz Communication a su créer une signalétique moderne et élégante qui reflète parfaitement notre image corporate. Nos clients et collaborateurs apprécient la clarté du fléchage.',
+        author: 'Sophie Leroy',
+        company: 'Directrice Générale - Cabinet Aviva Conseil'
+      }
     },
     seo: {
       metaTitle: 'Signalétique tertiaire Coulommiers - Bureaux et services',
@@ -179,7 +189,12 @@ const sectorTemplates: Record<string, SectorTemplate> = {
         { label: 'Magasins équipés', value: '150+' },
         { label: 'Centres commerciaux', value: '25+' },
         { label: 'ROI moyen constaté', value: '+30%' }
-      ]
+      ],
+      testimonial: {
+        text: 'Grâce à la nouvelle signalétique d\'Osmoz Communication, nos ventes ont augmenté de 25%. L\'enseigne lumineuse attire l\'œil et la PLV met parfaitement en valeur nos produits.',
+        author: 'Marc Dubois',
+        company: 'Gérant - Magasin Intermarché Coulommiers'
+      }
     },
     seo: {
       metaTitle: 'Signalétique commerciale Coulommiers - Magasins et retail',
@@ -214,7 +229,12 @@ const sectorTemplates: Record<string, SectorTemplate> = {
         { label: 'Événements réalisés', value: '300+' },
         { label: 'Festivals équipés', value: '50+' },
         { label: 'Délai d\'intervention', value: '24h' }
-      ]
+      ],
+      testimonial: {
+        text: 'Pour notre festival annuel, Osmoz Communication a livré une signalétique événementielle parfaite en un temps record. Montage impeccable et équipe très professionnelle.',
+        author: 'Amélie Rousseau',
+        company: 'Organisatrice - Festival de Coulommiers'
+      }
     },
     seo: {
       metaTitle: 'Signalétique événementielle Coulommiers - Salons et festivals',
@@ -249,7 +269,12 @@ const sectorTemplates: Record<string, SectorTemplate> = {
         { label: 'Sites culturels', value: '40+' },
         { label: 'Musées équipés', value: '20+' },
         { label: 'Langues disponibles', value: '10+' }
-      ]
+      ],
+      testimonial: {
+        text: 'La signalétique muséographique réalisée par Osmoz Communication sublime nos expositions. Les visiteurs naviguent facilement et l\'esthétique respecte parfaitement notre patrimoine.',
+        author: 'Catherine Moreau',
+        company: 'Conservatrice - Musée Municipal de Coulommiers'
+      }
     },
     seo: {
       metaTitle: 'Signalétique muséale Coulommiers - Musées et sites culturels',
@@ -344,48 +369,6 @@ export const SectorDetail: React.FC = () => {
                 </div>
               </motion.div>
             )}
-
-            {/* Testimonial */}
-            {template.content.testimonial && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="bg-brand-50 rounded-xl p-8"
-              >
-                <h3 className="text-2xl font-bold text-slate-800 mb-6">Témoignage client</h3>
-                <blockquote className="text-lg text-slate-600 italic mb-4">
-                  "{template.content.testimonial.text}"
-                </blockquote>
-                <div className="flex items-center space-x-2">
-                  <div>
-                    <div className="font-semibold text-slate-800">{template.content.testimonial.author}</div>
-                    <div className="text-sm text-slate-600">{template.content.testimonial.company}</div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Gallery */}
-            {template.content.gallery && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-              >
-                <h3 className="text-2xl font-bold text-slate-800 mb-6">Nos réalisations</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {template.content.gallery.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`Réalisation ${template.title}`}
-                      className="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
           </div>
 
           {/* Sidebar */}
@@ -452,6 +435,25 @@ export const SectorDetail: React.FC = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Testimonial - Full Width */}
+        {template.content.testimonial && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="bg-brand-50 rounded-xl p-8 mt-12"
+          >
+            <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center">Témoignage client</h3>
+            <blockquote className="text-xl text-slate-600 italic mb-6 text-center max-w-4xl mx-auto">
+              "{template.content.testimonial.text}"
+            </blockquote>
+            <div className="text-center">
+              <div className="font-semibold text-slate-800">{template.content.testimonial.author}</div>
+              <div className="text-sm text-slate-600">{template.content.testimonial.company}</div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Portfolio Gallery */}
@@ -462,4 +464,6 @@ export const SectorDetail: React.FC = () => {
       />
     </div>
   );
-}; 
+};
+
+ 

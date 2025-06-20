@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Clock, Euro, Shield, Phone, Mail } from 'lucide-react';
@@ -165,6 +165,7 @@ const serviceTemplates: Record<string, PageTemplate> = {
         { step: 5, title: 'Finition', description: 'Nettoyage et traitement de protection' },
         { step: 6, title: 'Contrôle final', description: 'Vérification qualité avant livraison' }
       ],
+
       pricing: {
         basic: 'À partir de 25€',
         premium: 'À partir de 50€',
@@ -195,6 +196,7 @@ const serviceTemplates: Record<string, PageTemplate> = {
         'Finitions multiples disponibles',
         'Délais courts garantis'
       ],
+
       pricing: {
         basic: 'À partir de 15€/m²',
         premium: 'À partir de 25€/m²',
@@ -233,6 +235,7 @@ const serviceTemplates: Record<string, PageTemplate> = {
         { step: 5, title: 'Contrôle qualité', description: 'Vérification et finitions parfaites' },
         { step: 6, title: 'Garantie', description: 'Suivi et maintenance préventive' }
       ],
+
       specifications: [
         { label: 'Réduction chaleur', value: 'Jusqu\'à 85%' },
         { label: 'Protection UV', value: '99%' },
@@ -411,6 +414,8 @@ export const ServiceDetail: React.FC = () => {
   }
 
   const template = serviceTemplates[service];
+  
+
 
   return (
     <div className="bg-white">
@@ -479,20 +484,27 @@ export const ServiceDetail: React.FC = () => {
               >
                 <h3 className="text-2xl font-bold text-slate-800 mb-6">Notre processus</h3>
                 <div className="space-y-6">
-                  {template.content.process.map((step, index) => (
-                    <div key={index} className="flex items-start space-x-4">
-                      <div className="w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {step.step}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-slate-800 mb-1">{step.title}</h4>
-                        <p className="text-slate-600">{step.description}</p>
-                      </div>
-                    </div>
-                  ))}
+                    {template.content.process.map((step, index) => (
+                      <motion.div 
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 * index }}
+                        className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
+                      >
+                        <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-md">
+                          {step.step}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-slate-800 mb-2 text-lg">{step.title}</h4>
+                          <p className="text-slate-600 leading-relaxed">{step.description}</p>
+                        </div>
+                      </motion.div>
+                    ))}
                 </div>
               </motion.div>
             )}
+
 
 
           </div>
@@ -616,4 +628,6 @@ export const ServiceDetail: React.FC = () => {
       />
     </div>
   );
-}; 
+};
+
+ 

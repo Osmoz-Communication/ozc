@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,6 +17,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
 }) => {
   const { portfolioItems } = useContent();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Filtrer les items par catégorie avec une recherche plus flexible
   let filteredItems = portfolioItems.filter(item => item.category === category);
@@ -35,9 +36,21 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
   
   // Prendre les 5 premiers items
   const displayItems = filteredItems.slice(0, 5);
+  const maxSlides = Math.max(1, displayItems.length - 2);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (isPaused || displayItems.length <= 3) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % maxSlides);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isPaused, displayItems.length, maxSlides]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % Math.max(1, displayItems.length - 2));
+    setCurrentSlide((prev) => (prev + 1) % maxSlides);
   };
 
   const prevSlide = () => {
@@ -78,7 +91,11 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
         </motion.div>
 
         {/* Carrousel Portfolio */}
-        <div className="relative max-w-6xl mx-auto">
+        <div 
+          className="relative max-w-6xl mx-auto"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {/* Flèches de navigation discrètes */}
           {displayItems.length > 3 && (
             <>
@@ -143,7 +160,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
           {/* Indicateurs */}
           {displayItems.length > 3 && (
             <div className="flex justify-center mt-8 space-x-2">
-              {Array.from({ length: Math.max(1, displayItems.length - 2) }, (_, index) => (
+              {Array.from({ length: maxSlides }, (_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}

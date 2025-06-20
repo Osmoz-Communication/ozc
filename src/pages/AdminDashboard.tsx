@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaEdit, FaTrash, FaTimes, FaSave, FaHome, FaCog, FaUsers, FaImages, FaNewspaper, FaServicestack, FaIndustry, FaEye, FaUpload, FaImage, FaSignOutAlt, FaBlog, FaRobot, FaClock, FaEnvelope, FaMailBulk } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaTimes, FaSave, FaHome, FaCog, FaUsers, FaImages, FaNewspaper, FaServicestack, FaIndustry, FaEye, FaUpload, FaImage, FaSignOutAlt, FaBlog, FaRobot, FaClock, FaEnvelope, FaMailBulk, FaArrowLeft, FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
@@ -62,6 +62,8 @@ export const AdminDashboard: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string>('');
   const [isScheduling, setIsScheduling] = useState(false);
   const [publishDateTime, setPublishDateTime] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+  const [totalSteps, setTotalSteps] = useState(1);
 
 
   // Données fictives pour les utilisateurs
@@ -84,11 +86,11 @@ export const AdminDashboard: React.FC = () => {
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Tableau de bord', icon: FaHome },
-    { id: 'slides', label: 'Slides Accueil', icon: FaImages },
+    { id: 'slides', label: 'Slider de l\'accueil', icon: FaImages },
     { id: 'services', label: 'Services', icon: FaServicestack },
     { id: 'secteurs', label: 'Secteurs', icon: FaIndustry },
     { id: 'portfolio', label: 'Portfolio', icon: FaEye },
-    { id: 'articles', label: 'Articles Blog', icon: FaBlog },
+    { id: 'articles', label: 'Articles de blog', icon: FaBlog },
     { id: 'messages', label: 'Messages', icon: FaEnvelope },
     { id: 'newsletter', label: 'Newsletter', icon: FaMailBulk },
     { id: 'users', label: 'Utilisateurs', icon: FaUsers },
@@ -96,13 +98,19 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   const [slides, setSlides] = useState([
-    { id: 1, title: 'Communication Visuelle', subtitle: 'Excellence & Innovation', image: 'slide1.jpg', status: 'Actif', order: 1 },
-    { id: 2, title: 'Signalétique', subtitle: 'Sur-mesure', image: 'slide2.jpg', status: 'Actif', order: 2 },
-    { id: 3, title: 'Impression', subtitle: 'Haute Qualité', image: 'slide3.jpg', status: 'Inactif', order: 3 }
+    { id: 1, title: 'Communication Visuelle', subtitle: 'Excellence & Innovation', image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800', status: 'Actif', order: 1 },
+    { id: 2, title: 'Signalétique', subtitle: 'Sur-mesure', image: 'https://images.pexels.com/photos/2422277/pexels-photo-2422277.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800', status: 'Actif', order: 2 },
+    { id: 3, title: 'Impression', subtitle: 'Haute Qualité', image: 'https://images.pexels.com/photos/3184298/pexels-photo-3184298.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800', status: 'Inactif', order: 3 }
   ]);
 
   // Fonctions pour le drag & drop des slides
   const handleDragStart = (e: React.DragEvent, slideId: number) => {
+    const slide = slides.find(s => s.id === slideId);
+    // Empêcher le drag des slides inactives
+    if (slide?.status === 'Inactif') {
+      e.preventDefault();
+      return;
+    }
     e.dataTransfer.setData('text/plain', slideId.toString());
   };
 
@@ -114,44 +122,373 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
     
-    if (draggedId !== targetId) {
-      const draggedSlide = slides.find(slide => slide.id === draggedId);
-      const targetSlide = slides.find(slide => slide.id === targetId);
+    const draggedSlide = slides.find(slide => slide.id === draggedId);
+    const targetSlide = slides.find(slide => slide.id === targetId);
+    
+    // Empêcher le drop sur ou depuis des slides inactives
+    if (draggedSlide?.status === 'Inactif' || targetSlide?.status === 'Inactif') {
+      return;
+    }
+    
+    if (draggedId !== targetId && draggedSlide && targetSlide) {
+      const newSlides = [...slides];
+      const draggedIndex = newSlides.findIndex(slide => slide.id === draggedId);
+      const targetIndex = newSlides.findIndex(slide => slide.id === targetId);
       
-      if (draggedSlide && targetSlide) {
-        const newSlides = [...slides];
-        const draggedIndex = newSlides.findIndex(slide => slide.id === draggedId);
-        const targetIndex = newSlides.findIndex(slide => slide.id === targetId);
+      // Échanger les positions seulement entre slides actives
+      [newSlides[draggedIndex], newSlides[targetIndex]] = [newSlides[targetIndex], newSlides[draggedIndex]];
+      
+      // Réorganiser les ordres : slides actives d'abord, puis inactives
+      const activeSlides = newSlides.filter(slide => slide.status === 'Actif');
+      const inactiveSlides = newSlides.filter(slide => slide.status === 'Inactif');
+      
+      // Assigner les ordres
+      activeSlides.forEach((slide, index) => {
+        slide.order = index + 1;
+      });
+      inactiveSlides.forEach((slide, index) => {
+        slide.order = activeSlides.length + index + 1;
+      });
+      
+      setSlides([...activeSlides, ...inactiveSlides]);
+    }
+  };
+
+  // État pour le drag & drop des services
+  const [draggedServiceId, setDraggedServiceId] = useState<number | null>(null);
+  const [dragOverServiceId, setDragOverServiceId] = useState<number | null>(null);
+
+  // État pour le drag & drop des secteurs
+  const [draggedSecteurId, setDraggedSecteurId] = useState<number | null>(null);
+  const [dragOverSecteurId, setDragOverSecteurId] = useState<number | null>(null);
+
+  // Fonctions pour le drag & drop des services
+  const handleServiceDragStart = (e: React.DragEvent, serviceId: number) => {
+    e.dataTransfer.setData('text/plain', serviceId.toString());
+    setDraggedServiceId(serviceId);
+    
+    // Créer une image de drag plus visible
+    const dragElement = e.currentTarget as HTMLElement;
+    const rect = dragElement.getBoundingClientRect();
+    
+    // Cloner l'élément pour créer l'image de drag
+    const clone = dragElement.cloneNode(true) as HTMLElement;
+    clone.style.position = 'absolute';
+    clone.style.top = '-9999px';
+    clone.style.left = '-9999px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.transform = 'scale(0.8)';
+    clone.style.opacity = '0.9';
+    clone.style.border = '2px solid #22c55e';
+    clone.style.borderRadius = '12px';
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+    
+    document.body.appendChild(clone);
+    
+    // Utiliser le clone comme image de drag
+    e.dataTransfer.setDragImage(clone, rect.width / 2, rect.height / 2);
+    
+    // Nettoyer le clone après un délai
+    setTimeout(() => {
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
+    }, 0);
+  };
+
+  const handleServiceDragOver = (e: React.DragEvent, serviceId: number) => {
+    e.preventDefault();
+    setDragOverServiceId(serviceId);
+  };
+
+  const handleServiceDragLeave = () => {
+    setDragOverServiceId(null);
+  };
+
+  const handleServiceDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+    
+    setDraggedServiceId(null);
+    setDragOverServiceId(null);
+    
+    if (draggedId !== targetId) {
+      const draggedService = services.find(service => service.id === draggedId);
+      const targetService = services.find(service => service.id === targetId);
+      
+      if (draggedService && targetService) {
+        const newServices = [...services];
+        const draggedIndex = newServices.findIndex(service => service.id === draggedId);
+        const targetIndex = newServices.findIndex(service => service.id === targetId);
         
         // Échanger les positions
-        [newSlides[draggedIndex], newSlides[targetIndex]] = [newSlides[targetIndex], newSlides[draggedIndex]];
+        [newServices[draggedIndex], newServices[targetIndex]] = [newServices[targetIndex], newServices[draggedIndex]];
         
         // Mettre à jour les ordres
-        newSlides.forEach((slide, index) => {
-          slide.order = index + 1;
+        newServices.forEach((service, index) => {
+          service.order = index + 1;
         });
         
-        setSlides(newSlides);
+        setServices(newServices);
       }
     }
   };
 
-  const mockServices = [
-    { id: 1, name: 'Signalétique', description: 'Signalétique sur-mesure', status: 'Visible' },
-    { id: 2, name: 'Enseigne', description: 'Enseignes lumineuses', status: 'Visible' },
-    { id: 3, name: 'Gravure', description: 'Gravure laser', status: 'Masqué' }
-  ];
+  const handleServiceDragEnd = () => {
+    setDraggedServiceId(null);
+    setDragOverServiceId(null);
+  };
 
-  const mockSecteurs = [
-    { id: 1, name: 'Hôtellerie', description: 'Secteur hôtelier', status: 'Visible' },
-    { id: 2, name: 'Industrie', description: 'Secteur industriel', status: 'Visible' },
-    { id: 3, name: 'Commerce', description: 'Secteur commercial', status: 'Masqué' }
-  ];
+  // Fonctions pour le drag & drop des secteurs
+  const handleSecteurDragStart = (e: React.DragEvent, secteurId: number) => {
+    e.dataTransfer.setData('text/plain', secteurId.toString());
+    setDraggedSecteurId(secteurId);
+    
+    // Créer une image de drag plus visible
+    const dragElement = e.currentTarget as HTMLElement;
+    const rect = dragElement.getBoundingClientRect();
+    
+    // Cloner l'élément pour créer l'image de drag
+    const clone = dragElement.cloneNode(true) as HTMLElement;
+    clone.style.position = 'absolute';
+    clone.style.top = '-9999px';
+    clone.style.left = '-9999px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.transform = 'scale(0.8)';
+    clone.style.opacity = '0.9';
+    clone.style.border = '2px solid #22c55e';
+    clone.style.borderRadius = '12px';
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+    
+    document.body.appendChild(clone);
+    
+    // Utiliser le clone comme image de drag
+    e.dataTransfer.setDragImage(clone, rect.width / 2, rect.height / 2);
+    
+    // Nettoyer le clone après un délai
+    setTimeout(() => {
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
+    }, 0);
+  };
+
+  const handleSecteurDragOver = (e: React.DragEvent, secteurId: number) => {
+    e.preventDefault();
+    setDragOverSecteurId(secteurId);
+  };
+
+  const handleSecteurDragLeave = () => {
+    setDragOverSecteurId(null);
+  };
+
+  const handleSecteurDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+    
+    setDraggedSecteurId(null);
+    setDragOverSecteurId(null);
+    
+    if (draggedId !== targetId) {
+      const draggedSecteur = secteurs.find(secteur => secteur.id === draggedId);
+      const targetSecteur = secteurs.find(secteur => secteur.id === targetId);
+      
+      if (draggedSecteur && targetSecteur) {
+        const newSecteurs = [...secteurs];
+        const draggedIndex = newSecteurs.findIndex(secteur => secteur.id === draggedId);
+        const targetIndex = newSecteurs.findIndex(secteur => secteur.id === targetId);
+        
+        // Échanger les positions
+        [newSecteurs[draggedIndex], newSecteurs[targetIndex]] = [newSecteurs[targetIndex], newSecteurs[draggedIndex]];
+        
+        // Mettre à jour les ordres
+        newSecteurs.forEach((secteur, index) => {
+          secteur.order = index + 1;
+        });
+        
+        setSecteurs(newSecteurs);
+      }
+    }
+  };
+
+  const handleSecteurDragEnd = () => {
+    setDraggedSecteurId(null);
+    setDragOverSecteurId(null);
+  };
+
+  const [services, setServices] = useState([
+    { 
+      id: 1, 
+      name: 'Signalétique', 
+      description: 'Solutions de signalétique intérieure et extérieure sur-mesure', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/2422277/pexels-photo-2422277.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'signaletique',
+      portfolioProjects: [],
+      order: 1
+    },
+    { 
+      id: 2, 
+      name: 'Enseigne', 
+      description: 'Conception et installation d\'enseignes lumineuses et non-lumineuses', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'enseigne',
+      portfolioProjects: [],
+      order: 2
+    },
+    { 
+      id: 3, 
+      name: 'Gravure', 
+      description: 'Gravure laser haute précision sur tous matériaux', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'gravure',
+      portfolioProjects: [],
+      order: 3
+    },
+    { 
+      id: 4, 
+      name: 'Impression', 
+      description: 'Impression grand format et petit format haute qualité', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184298/pexels-photo-3184298.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'impression',
+      portfolioProjects: [],
+      order: 4
+    },
+    { 
+      id: 5, 
+      name: 'Marquage Véhicule', 
+      description: 'Marquage publicitaire et habillage de véhicules', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'marquage-vehicule',
+      portfolioProjects: [],
+      order: 5
+    },
+    { 
+      id: 6, 
+      name: 'Stands & PLV', 
+      description: 'Stands d\'exposition et publicité sur lieu de vente', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'stands-plv',
+      portfolioProjects: [],
+      order: 6
+    },
+    { 
+      id: 7, 
+      name: 'Bâches & Banderoles', 
+      description: 'Bâches publicitaires et banderoles événementielles', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'baches-banderoles',
+      portfolioProjects: [],
+      order: 7
+    },
+    { 
+      id: 8, 
+      name: 'Adhésifs & Stickers', 
+      description: 'Adhésifs décoratifs et stickers personnalisés', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/3184394/pexels-photo-3184394.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'adhesifs-stickers',
+      portfolioProjects: [],
+      order: 8
+    }
+  ]);
+
+  const [secteurs, setSecteurs] = useState([
+    { 
+      id: 1, 
+      name: 'Hôtellerie', 
+      description: 'Solutions signalétiques pour hôtels, restaurants et établissements touristiques', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'hotellerie',
+      order: 1
+    },
+    { 
+      id: 2, 
+      name: 'Commerce', 
+      description: 'Signalétique commerciale pour magasins, centres commerciaux et points de vente', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'commerce',
+      order: 2
+    },
+    { 
+      id: 3, 
+      name: 'Industrie', 
+      description: 'Signalétique industrielle, sécurité et marquage d\'usines', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'industrie',
+      order: 3
+    },
+    { 
+      id: 4, 
+      name: 'Santé', 
+      description: 'Signalétique médicale pour hôpitaux, cliniques et cabinets médicaux', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'sante',
+      order: 4
+    },
+    { 
+      id: 5, 
+      name: 'Éducation', 
+      description: 'Signalétique éducative pour écoles, universités et centres de formation', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'education',
+      order: 5
+    },
+    { 
+      id: 6, 
+      name: 'Transport', 
+      description: 'Signalétique de transport pour gares, aéroports et transports en commun', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/723240/pexels-photo-723240.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'transport',
+      order: 6
+    },
+    { 
+      id: 7, 
+      name: 'Bureaux', 
+      description: 'Signalétique de bureaux et espaces de travail', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'bureaux',
+      order: 7
+    },
+    { 
+      id: 8, 
+      name: 'Événementiel', 
+      description: 'Signalétique événementielle temporaire et stands', 
+      status: 'Visible',
+      image: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
+      slug: 'evenementiel',
+      order: 8
+    }
+  ]);
 
   const mockPortfolio = [
-    { id: 1, title: 'Hotel Mama Shelter', category: 'Hôtellerie', image: 'mama.jpg', date: '2024-01-15' },
-    { id: 2, title: 'Enseigne Intermarché', category: 'Commerce', image: 'inter.jpg', date: '2024-01-10' },
-    { id: 3, title: 'Signalétique IKEA', category: 'Commerce', image: 'ikea.jpg', date: '2024-01-05' }
+    { id: 1, title: 'Hotel Mama Shelter', category: 'Hôtellerie', image: 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2024-01-15', description: 'Signalétique complète pour hôtel' },
+    { id: 2, title: 'Enseigne Intermarché', category: 'Commerce', image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2024-01-10', description: 'Enseigne lumineuse et signalétique' },
+    { id: 3, title: 'Signalétique IKEA', category: 'Commerce', image: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2024-01-05', description: 'Signalétique directionnelle' },
+    { id: 4, title: 'Mairie de Paris', category: 'Bureaux', image: 'https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2024-01-03', description: 'Signalétique institutionnelle' },
+    { id: 5, title: 'Hôpital Saint-Louis', category: 'Santé', image: 'https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2024-01-01', description: 'Signalétique médicale' },
+    { id: 6, title: 'Usine Renault', category: 'Industrie', image: 'https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2023-12-28', description: 'Signalétique de sécurité' },
+    { id: 7, title: 'Gare de Lyon', category: 'Transport', image: 'https://images.pexels.com/photos/723240/pexels-photo-723240.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2023-12-25', description: 'Signalétique de transport' },
+    { id: 8, title: 'Salon du Meuble', category: 'Événementiel', image: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2023-12-20', description: 'Stand événementiel' },
+    { id: 9, title: 'École Polytechnique', category: 'Éducation', image: 'https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2023-12-15', description: 'Signalétique éducative' },
+    { id: 10, title: 'Disney Village', category: 'Commerce', image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800&h=600', date: '2023-12-10', description: 'Signalétique thématique' }
   ];
 
   const [articles, setArticles] = useState([
@@ -275,8 +612,41 @@ export const AdminDashboard: React.FC = () => {
     setModalType(type);
     setModalContent(content);
     setSelectedItem(item);
-    setFormData(item || {});
+    
+    // Pour les services, s'assurer que l'image est bien chargée
+    if (content === 'service' && item) {
+      setFormData({
+        ...item,
+        heroImage: item.heroImage || item.image || '' // Utiliser heroImage en priorité, sinon image
+      });
+    } else if (content === 'secteur' && item) {
+      setFormData({
+        ...item,
+        heroImage: item.heroImage || item.image || '', // Utiliser heroImage en priorité, sinon image
+        title: item.name || item.title || '', // Compatibilité avec les deux formats
+        features: item.features || [],
+        specialties: item.specialties || [],
+        statistics: item.statistics || [],
+        testimonialText: item.testimonialText || '',
+        testimonialAuthor: item.testimonialAuthor || '',
+        testimonialCompany: item.testimonialCompany || ''
+      });
+    } else {
+      setFormData(item || {});
+    }
+    
     setPreviewImage(item?.image || '');
+    setCurrentStep(1);
+    
+    // Définir le nombre d'étapes selon le type de contenu
+    if (content === 'service' && type !== 'delete') {
+      setTotalSteps(7); // Infos de base, Prestations, Processus, Informations pratiques, Spécifications, Projets portfolio, SEO
+    } else if (content === 'secteur' && type !== 'delete') {
+      setTotalSteps(6); // Infos de base, Solutions, Spécialités, Statistiques, Témoignage, SEO
+    } else {
+      setTotalSteps(1);
+    }
+    
     setShowModal(true);
   };
 
@@ -287,6 +657,8 @@ export const AdminDashboard: React.FC = () => {
     setPreviewImage('');
     setIsScheduling(false);
     setPublishDateTime('');
+    setCurrentStep(1);
+    setTotalSteps(1);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -750,6 +1122,1012 @@ export const AdminDashboard: React.FC = () => {
     }, 3000);
   };
 
+  const renderSecteurModalContent = () => {
+    const stepTitles = [
+      'Informations de base',
+      'Solutions',
+      'Spécialités',
+      'Statistiques',
+      'Témoignage',
+      'SEO'
+    ];
+
+    const nextStep = () => {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      }
+    };
+
+    const prevStep = () => {
+      if (currentStep > 1) {
+        setCurrentStep(currentStep - 1);
+      }
+    };
+
+    const handleArrayInputChange = (field: string, index: number, value: string) => {
+      const array = formData[field] || [];
+      const newArray = [...array];
+      newArray[index] = value;
+      setFormData((prev: any) => ({ ...prev, [field]: newArray }));
+    };
+
+    const addArrayItem = (field: string) => {
+      const array = formData[field] || [];
+      setFormData((prev: any) => ({ ...prev, [field]: [...array, ''] }));
+    };
+
+    const removeArrayItem = (field: string, index: number) => {
+      const array = formData[field] || [];
+      const newArray = array.filter((_: any, i: number) => i !== index);
+      setFormData((prev: any) => ({ ...prev, [field]: newArray }));
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-800">
+              {selectedItem ? 'Modifier le secteur' : 'Créer un nouveau secteur'}
+            </h2>
+            <div className="bg-brand-100 px-4 py-2 rounded-full">
+              <span className="text-sm font-medium text-brand-700">Étape {currentStep} sur {totalSteps}</span>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute top-4 left-4 right-4 h-1 bg-gray-200">
+              <div 
+                className="h-full bg-green-500 transition-all duration-300"
+                style={{ width: `${((currentStep - 1) / (stepTitles.length - 1)) * 100}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between relative z-10">
+              {stepTitles.map((title, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentStep(index + 1)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    index + 1 === currentStep 
+                      ? 'bg-brand-500 text-white shadow-lg' 
+                      : index + 1 < currentStep 
+                        ? 'bg-green-500 text-white hover:bg-green-600' 
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  }`}
+                  title={title}
+                >
+                  {index + 1 < currentStep ? '✓' : index + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 text-sm font-medium text-slate-700">{stepTitles[currentStep - 1]}</div>
+        </div>
+
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          {stepTitles[currentStep - 1]}
+        </h3>
+
+        {/* Step Content */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Nom du secteur</label>
+              <input
+                type="text"
+                value={formData.title || ''}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: Hôtellerie"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Sous-titre</label>
+              <input
+                type="text"
+                value={formData.subtitle || ''}
+                onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: Solutions de communication visuelle pour l'hôtellerie"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Slug URL</label>
+              <input
+                type="text"
+                value={formData.slug || ''}
+                onChange={(e) => handleInputChange('slug', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: hotellerie"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+              <textarea
+                rows={3}
+                value={formData.description || ''}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                placeholder="Description du secteur"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Image Hero</label>
+              
+              {/* Affichage de l'image actuelle si elle existe */}
+              {formData.heroImage && (
+                <div className="relative mb-4">
+                  <img 
+                    src={formData.heroImage} 
+                    alt="Image Hero actuelle" 
+                    className="w-full h-48 object-cover rounded-xl shadow-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('heroImage', '')}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  >
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                    Image Hero actuelle
+                  </div>
+                </div>
+              )}
+              
+              {/* Zone de drag & drop - toujours visible */}
+              <div
+                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-all duration-200"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const result = event.target?.result as string;
+                      handleInputChange('heroImage', result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                onClick={() => document.getElementById('secteurHeroImageInput')?.click()}
+              >
+                <div className="text-center">
+                  <div className="text-4xl text-slate-400 mb-2">📷</div>
+                  <p className="text-sm text-slate-600">
+                    {formData.heroImage ? 'Glissez une nouvelle image ici ou cliquez' : 'Glissez une image ici ou cliquez pour sélectionner'}
+                  </p>
+                </div>
+              </div>
+              <input
+                id="secteurHeroImageInput"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const result = event.target?.result as string;
+                      handleInputChange('heroImage', result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
+              <select
+                value={formData.status || 'Visible'}
+                onChange={(e) => handleInputChange('status', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+              >
+                <option value="Visible">Visible</option>
+                <option value="Masqué">Masqué</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Solutions proposées</label>
+              {(formData.features || []).map((feature: string, index: number) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={feature}
+                    onChange={(e) => handleArrayInputChange('features', index, e.target.value)}
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Solution proposée"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeArrayItem('features', index)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addArrayItem('features')}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une solution
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Spécialités</label>
+              {(formData.specialties || []).map((specialty: string, index: number) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={specialty}
+                    onChange={(e) => handleArrayInputChange('specialties', index, e.target.value)}
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Spécialité"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeArrayItem('specialties', index)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addArrayItem('specialties')}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une spécialité
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 4 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Statistiques</label>
+              {(formData.statistics || []).map((stat: any, index: number) => (
+                <div key={index} className="border border-gray-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <input
+                      type="text"
+                      value={stat.label || ''}
+                      onChange={(e) => {
+                        const newStats = [...(formData.statistics || [])];
+                        newStats[index] = { ...newStats[index], label: e.target.value };
+                        setFormData((prev: any) => ({ ...prev, statistics: newStats }));
+                      }}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                      placeholder="Libellé de la statistique"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newStats = (formData.statistics || []).filter((_: any, i: number) => i !== index);
+                        setFormData((prev: any) => ({ ...prev, statistics: newStats }));
+                      }}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={stat.value || ''}
+                    onChange={(e) => {
+                      const newStats = [...(formData.statistics || [])];
+                      newStats[index] = { ...newStats[index], value: e.target.value };
+                      setFormData((prev: any) => ({ ...prev, statistics: newStats }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Valeur (ex: 50+, 100%, 15 ans)"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const newStats = [...(formData.statistics || []), { label: '', value: '' }];
+                  setFormData((prev: any) => ({ ...prev, statistics: newStats }));
+                }}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une statistique
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 5 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Témoignage client</label>
+              <textarea
+                rows={4}
+                value={formData.testimonialText || ''}
+                onChange={(e) => handleInputChange('testimonialText', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                placeholder="Texte du témoignage"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Auteur</label>
+                <input
+                  type="text"
+                  value={formData.testimonialAuthor || ''}
+                  onChange={(e) => handleInputChange('testimonialAuthor', e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                  placeholder="Nom de l'auteur"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Entreprise</label>
+                <input
+                  type="text"
+                  value={formData.testimonialCompany || ''}
+                  onChange={(e) => handleInputChange('testimonialCompany', e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                  placeholder="Nom de l'entreprise"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 6 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Titre SEO</label>
+              <input
+                type="text"
+                value={formData.metaTitle || ''}
+                onChange={(e) => handleInputChange('metaTitle', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Titre optimisé pour les moteurs de recherche"
+              />
+              <p className="text-xs text-gray-500 mt-1">Recommandé : 50-60 caractères</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Description SEO</label>
+              <textarea
+                rows={3}
+                value={formData.metaDescription || ''}
+                onChange={(e) => handleInputChange('metaDescription', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                placeholder="Description pour les résultats de recherche"
+              />
+              <p className="text-xs text-gray-500 mt-1">Recommandé : 150-160 caractères</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Mots-clés</label>
+              <input
+                type="text"
+                value={(formData.keywords || []).join(', ')}
+                onChange={(e) => {
+                  setFormData((prev: any) => ({ 
+                    ...prev, 
+                    keywords: e.target.value.split(',').map((k: string) => k.trim()).filter((k: string) => k)
+                  }));
+                }}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="mot-clé1, mot-clé2, mot-clé3..."
+              />
+              <p className="text-xs text-gray-500 mt-1">Séparez les mots-clés par des virgules</p>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation buttons */}
+        <div className="flex justify-between pt-6">
+          <button
+            type="button"
+            onClick={currentStep === 1 ? closeModal : prevStep}
+            className="px-6 py-3 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-medium flex items-center gap-2"
+          >
+            {currentStep === 1 ? (
+              <>
+                <FaTimes className="w-4 h-4" />
+                Annuler
+              </>
+            ) : (
+              <>
+                <FaChevronLeft className="w-4 h-4" />
+                Précédent
+              </>
+            )}
+          </button>
+          
+          <button
+            type="button"
+            onClick={currentStep === totalSteps ? handleSave : nextStep}
+            className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
+          >
+            {currentStep === totalSteps ? (
+              <>
+                <FaSave className="w-4 h-4" />
+                Enregistrer
+              </>
+            ) : (
+              <>
+                Suivant
+                <FaChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderServiceModalContent = () => {
+    const stepTitles = [
+      'Informations de base',
+      'Prestations',
+      'Processus',
+      'Informations pratiques',
+      'Spécifications',
+      'Projets portfolio',
+      'SEO'
+    ];
+
+    const nextStep = () => {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      }
+    };
+
+    const prevStep = () => {
+      if (currentStep > 1) {
+        setCurrentStep(currentStep - 1);
+      }
+    };
+
+    const handleArrayInputChange = (field: string, index: number, value: string) => {
+      const array = formData[field] || [];
+      const newArray = [...array];
+      newArray[index] = value;
+      setFormData((prev: any) => ({ ...prev, [field]: newArray }));
+    };
+
+    const addArrayItem = (field: string) => {
+      const array = formData[field] || [];
+      setFormData((prev: any) => ({ ...prev, [field]: [...array, ''] }));
+    };
+
+    const removeArrayItem = (field: string, index: number) => {
+      const array = formData[field] || [];
+      const newArray = array.filter((_: any, i: number) => i !== index);
+      setFormData((prev: any) => ({ ...prev, [field]: newArray }));
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-800">
+              {selectedItem ? 'Modifier le service' : 'Créer un nouveau service'}
+            </h2>
+            <div className="bg-brand-100 px-4 py-2 rounded-full">
+              <span className="text-sm font-medium text-brand-700">Étape {currentStep} sur {totalSteps}</span>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute top-4 left-4 right-4 h-1 bg-gray-200">
+              <div 
+                className="h-full bg-green-500 transition-all duration-300"
+                style={{ width: `${((currentStep - 1) / (stepTitles.length - 1)) * 100}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between relative z-10">
+              {stepTitles.map((title, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentStep(index + 1)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    index + 1 === currentStep 
+                      ? 'bg-brand-500 text-white shadow-lg' 
+                      : index + 1 < currentStep 
+                        ? 'bg-green-500 text-white hover:bg-green-600' 
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  }`}
+                  title={title}
+                >
+                  {index + 1 < currentStep ? '✓' : index + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 text-sm font-medium text-slate-700">{stepTitles[currentStep - 1]}</div>
+        </div>
+
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          {stepTitles[currentStep - 1]}
+        </h3>
+
+        {/* Step Content */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Titre complet</label>
+              <input
+                type="text"
+                value={formData.title || ''}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: Signalétique"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Sous-titre</label>
+              <input
+                type="text"
+                value={formData.subtitle || ''}
+                onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: Solutions de signalétique intérieure et extérieure"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Slug URL</label>
+              <input
+                type="text"
+                value={formData.slug || ''}
+                onChange={(e) => handleInputChange('slug', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Ex: signaletique"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+              <textarea
+                rows={3}
+                value={formData.description || ''}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                placeholder="Description du service"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Image Hero</label>
+              
+              {/* Affichage de l'image actuelle si elle existe */}
+              {formData.heroImage && (
+                <div className="relative mb-4">
+                  <img 
+                    src={formData.heroImage} 
+                    alt="Image Hero actuelle" 
+                    className="w-full h-48 object-cover rounded-xl shadow-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('heroImage', '')}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  >
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                    Image Hero actuelle
+                  </div>
+                </div>
+              )}
+              
+              {/* Zone de drag & drop - toujours visible */}
+              <div
+                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-all duration-200"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const result = event.target?.result as string;
+                      handleInputChange('heroImage', result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                onClick={() => document.getElementById('heroImageInput')?.click()}
+              >
+                <div className="text-center">
+                  <div className="text-4xl text-slate-400 mb-2">📷</div>
+                  <p className="text-sm text-slate-600">
+                    {formData.heroImage ? 'Glissez une nouvelle image ici ou cliquez' : 'Glissez une image ici ou cliquez pour sélectionner'}
+                  </p>
+                </div>
+              </div>
+              <input
+                id="heroImageInput"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const result = event.target?.result as string;
+                      handleInputChange('heroImage', result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
+              <select
+                value={formData.status || 'Visible'}
+                onChange={(e) => handleInputChange('status', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+              >
+                <option value="Visible">Visible</option>
+                <option value="Masqué">Masqué</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Prestations</label>
+              {(formData.prestations || []).map((prestation: string, index: number) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={prestation}
+                    onChange={(e) => handleArrayInputChange('prestations', index, e.target.value)}
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Prestation"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeArrayItem('prestations', index)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addArrayItem('prestations')}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une prestation
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Étapes du processus</label>
+              {(formData.process || []).map((step: any, index: number) => (
+                <div key={index} className="border border-gray-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <input
+                      type="text"
+                      value={step.title || ''}
+                      onChange={(e) => {
+                        const newProcess = [...(formData.process || [])];
+                        newProcess[index] = { ...newProcess[index], title: e.target.value };
+                        setFormData((prev: any) => ({ ...prev, process: newProcess }));
+                      }}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                      placeholder="Titre de l'étape"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newProcess = (formData.process || []).filter((_: any, i: number) => i !== index);
+                        setFormData((prev: any) => ({ ...prev, process: newProcess }));
+                      }}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={step.description || ''}
+                    onChange={(e) => {
+                      const newProcess = [...(formData.process || [])];
+                      newProcess[index] = { ...newProcess[index], description: e.target.value };
+                      setFormData((prev: any) => ({ ...prev, process: newProcess }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                    placeholder="Description de l'étape"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const newProcess = [...(formData.process || []), { step: (formData.process || []).length + 1, title: '', description: '' }];
+                  setFormData((prev: any) => ({ ...prev, process: newProcess }));
+                }}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une étape
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 4 && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Délai de réalisation</label>
+                <input
+                  type="text"
+                  value={formData.duration || ''}
+                  onChange={(e) => handleInputChange('duration', e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                  placeholder="Ex: 5 à 15 jours"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Garantie</label>
+                <input
+                  type="text"
+                  value={formData.warranty || ''}
+                  onChange={(e) => handleInputChange('warranty', e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                  placeholder="Ex: 2 ans"
+                />
+              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">💰</span>
+                </div>
+                <h4 className="font-medium text-blue-800">Tarification</h4>
+              </div>
+              <p className="text-blue-700 text-sm">
+                Politique tarifaire : <strong>Devis sur mesure uniquement</strong>. Aucun tarif fixe n'est affiché sur le site.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 5 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Spécifications techniques</label>
+              {(formData.specifications || []).map((spec: any, index: number) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={spec.label || ''}
+                    onChange={(e) => {
+                      const newSpecs = [...(formData.specifications || [])];
+                      newSpecs[index] = { ...newSpecs[index], label: e.target.value };
+                      setFormData((prev: any) => ({ ...prev, specifications: newSpecs }));
+                    }}
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Nom de la spécification"
+                  />
+                  <input
+                    type="text"
+                    value={spec.value || ''}
+                    onChange={(e) => {
+                      const newSpecs = [...(formData.specifications || [])];
+                      newSpecs[index] = { ...newSpecs[index], value: e.target.value };
+                      setFormData((prev: any) => ({ ...prev, specifications: newSpecs }));
+                    }}
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                    placeholder="Valeur"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSpecs = (formData.specifications || []).filter((_: any, i: number) => i !== index);
+                      setFormData((prev: any) => ({ ...prev, specifications: newSpecs }));
+                    }}
+                    className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const newSpecs = [...(formData.specifications || []), { label: '', value: '' }];
+                  setFormData((prev: any) => ({ ...prev, specifications: newSpecs }));
+                }}
+                className="w-full px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 rounded-xl hover:bg-brand-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter une spécification
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 6 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Rechercher un projet</label>
+              <input
+                type="text"
+                value={formData.projectSearch || ''}
+                onChange={(e) => handleInputChange('projectSearch', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Tapez pour rechercher un projet..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Projets portfolio à afficher (5 max)</label>
+              <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto border border-slate-200 rounded-xl p-4">
+                {mockPortfolio
+                  .filter((project) => 
+                    !formData.projectSearch || 
+                    project.title.toLowerCase().includes((formData.projectSearch || '').toLowerCase()) ||
+                    project.category.toLowerCase().includes((formData.projectSearch || '').toLowerCase()) ||
+                    project.description.toLowerCase().includes((formData.projectSearch || '').toLowerCase())
+                  )
+                  .map((project) => (
+                  <label key={project.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={(formData.portfolioProjects || []).includes(project.id)}
+                      onChange={(e) => {
+                        const currentProjects = formData.portfolioProjects || [];
+                        if (e.target.checked && currentProjects.length < 5) {
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            portfolioProjects: [...currentProjects, project.id]
+                          }));
+                        } else if (!e.target.checked) {
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            portfolioProjects: currentProjects.filter((id: number) => id !== project.id)
+                          }));
+                        }
+                      }}
+                      disabled={(formData.portfolioProjects || []).length >= 5 && !(formData.portfolioProjects || []).includes(project.id)}
+                      className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
+                    />
+                    <img 
+                      src={project.image} 
+                      alt={project.title}
+                      className="w-12 h-12 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-slate-800">{project.title}</h4>
+                      <p className="text-sm text-slate-600">{project.category}</p>
+                      <p className="text-xs text-slate-500">{project.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <p className="text-sm text-slate-500 mt-2">
+                Sélectionnés: {(formData.portfolioProjects || []).length}/5
+              </p>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 7 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Titre SEO</label>
+              <input
+                type="text"
+                value={formData.metaTitle || ''}
+                onChange={(e) => handleInputChange('metaTitle', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="Titre optimisé pour les moteurs de recherche"
+              />
+              <p className="text-xs text-gray-500 mt-1">Recommandé : 50-60 caractères</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Description SEO</label>
+              <textarea
+                rows={3}
+                value={formData.metaDescription || ''}
+                onChange={(e) => handleInputChange('metaDescription', e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
+                placeholder="Description pour les résultats de recherche"
+              />
+              <p className="text-xs text-gray-500 mt-1">Recommandé : 150-160 caractères</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Mots-clés</label>
+              <input
+                type="text"
+                value={(formData.keywords || []).join(', ')}
+                onChange={(e) => {
+                  setFormData((prev: any) => ({ 
+                    ...prev, 
+                    keywords: e.target.value.split(',').map((k: string) => k.trim()).filter((k: string) => k)
+                  }));
+                }}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
+                placeholder="mot-clé1, mot-clé2, mot-clé3..."
+              />
+              <p className="text-xs text-gray-500 mt-1">Séparez les mots-clés par des virgules</p>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation buttons */}
+        <div className="flex justify-between pt-6">
+          <button
+            type="button"
+            onClick={currentStep === 1 ? closeModal : prevStep}
+            className="px-6 py-3 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-medium flex items-center gap-2"
+          >
+            {currentStep === 1 ? (
+              <>
+                <FaTimes className="w-4 h-4" />
+                Annuler
+              </>
+            ) : (
+              <>
+                <FaChevronLeft className="w-4 h-4" />
+                Précédent
+              </>
+            )}
+          </button>
+          
+          <button
+            type="button"
+            onClick={currentStep === totalSteps ? handleSave : nextStep}
+            className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
+          >
+            {currentStep === totalSteps ? (
+              <>
+                <FaSave className="w-4 h-4" />
+                Enregistrer
+              </>
+            ) : (
+              <>
+                Suivant
+                <FaChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderModalContent = () => {
     if (modalType === 'delete') {
       return (
@@ -888,115 +2266,11 @@ export const AdminDashboard: React.FC = () => {
     }
 
     if (modalContent === 'service') {
-      return (
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Nom du service</label>
-            <input
-              type="text"
-              value={formData.name || ''}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
-              placeholder="Ex: Signalétique"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
-            <textarea
-              rows={3}
-              value={formData.description || ''}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
-              placeholder="Description du service"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
-            <select
-              value={formData.status || 'Visible'}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
-            >
-              <option value="Visible">Visible</option>
-              <option value="Masqué">Masqué</option>
-            </select>
-          </div>
-
-          <div className="flex gap-4 justify-end pt-6">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-6 py-3 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
-            >
-              <FaSave className="w-4 h-4" />
-              {title}
-            </button>
-          </div>
-        </div>
-      );
+      return renderServiceModalContent();
     }
 
     if (modalContent === 'secteur') {
-      return (
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Nom du secteur</label>
-            <input
-              type="text"
-              value={formData.name || ''}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
-              placeholder="Ex: Hôtellerie"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
-            <textarea
-              rows={3}
-              value={formData.description || ''}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm resize-none"
-              placeholder="Description du secteur"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
-            <select
-              value={formData.status || 'Visible'}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 shadow-sm"
-            >
-              <option value="Visible">Visible</option>
-              <option value="Masqué">Masqué</option>
-            </select>
-          </div>
-
-          <div className="flex gap-4 justify-end pt-6">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-6 py-3 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
-            >
-              <FaSave className="w-4 h-4" />
-              {title}
-            </button>
-          </div>
-        </div>
-      );
+      return renderSecteurModalContent();
     }
 
     if (modalContent === 'portfolio') {
@@ -1556,8 +2830,8 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Services</p>
-                    <p className="text-3xl font-bold text-slate-800">{mockServices.length}</p>
-                    <p className="text-xs text-green-600 mt-1">{mockServices.filter(s => s.status === 'Visible').length} visibles</p>
+                    <p className="text-3xl font-bold text-slate-800">{services.length}</p>
+                    <p className="text-xs text-green-600 mt-1">{services.filter((s: any) => s.status === 'Visible').length} visibles</p>
                   </div>
                   <FaServicestack className="w-8 h-8 text-brand-500" />
                 </div>
@@ -1567,8 +2841,8 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Secteurs</p>
-                    <p className="text-3xl font-bold text-slate-800">{mockSecteurs.length}</p>
-                    <p className="text-xs text-blue-600 mt-1">{mockSecteurs.filter(s => s.status === 'Visible').length} visibles</p>
+                    <p className="text-3xl font-bold text-slate-800">{secteurs.length}</p>
+                    <p className="text-xs text-blue-600 mt-1">{secteurs.filter((s: any) => s.status === 'Visible').length} visibles</p>
                   </div>
                   <FaIndustry className="w-8 h-8 text-brand-500" />
                 </div>
@@ -1686,18 +2960,30 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   {slides.slice(0, 3).map((slide) => (
-                    <div key={slide.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{slide.title}</p>
-                        <p className="text-xs text-slate-500">{slide.subtitle}</p>
+                    <div 
+                      key={slide.id} 
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors group"
+                      onClick={() => openModal('edit', 'slide', slide)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-8 bg-brand-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 group-hover:text-brand-600 transition-colors">
+                            {slide.title}
+                          </p>
+                          <p className="text-xs text-slate-500">{slide.subtitle}</p>
+                        </div>
                       </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        slide.status === 'Actif' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {slide.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          slide.status === 'Actif' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {slide.status}
+                        </span>
+                        <FaEdit className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1810,7 +3096,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800">Slides Accueil</h1>
+                <h1 className="text-3xl font-bold text-slate-800">Slider de l'accueil</h1>
                 <p className="text-sm text-slate-600 mt-1">Glissez-déposez pour réorganiser l'ordre d'affichage</p>
               </div>
               <button
@@ -1822,42 +3108,79 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
             
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                <div className="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase">
-                  <div className="col-span-1">Ordre</div>
-                  <div className="col-span-4">Titre</div>
-                  <div className="col-span-3">Sous-titre</div>
-                  <div className="col-span-2">Statut</div>
-                  <div className="col-span-2 text-right">Actions</div>
-                </div>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {slides.sort((a, b) => a.order - b.order).map((slide) => (
-                  <div
-                    key={slide.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, slide.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, slide.id)}
-                    className="px-6 py-4 hover:bg-gray-50 cursor-move transition-colors group"
-                  >
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-1 flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center text-xs font-medium text-gray-600 group-hover:bg-brand-100 group-hover:text-brand-700 transition-colors">
-                          {slide.order}
+            <div className="space-y-4">
+              {slides.sort((a, b) => a.order - b.order).map((slide) => (
+                <div
+                  key={slide.id}
+                  draggable={slide.status === 'Actif'}
+                  onDragStart={(e) => handleDragStart(e, slide.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, slide.id)}
+                  className={`bg-white rounded-xl shadow-lg border overflow-hidden transition-all duration-200 group hover:shadow-xl ${
+                    slide.status === 'Inactif' 
+                      ? 'border-gray-200 cursor-default' 
+                      : 'border-gray-100 cursor-move hover:border-brand-300'
+                  }`}
+                >
+                  <div className="flex items-center p-6 gap-6">
+                    {/* Badge d'ordre et indicateur de drag */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg transition-colors ${
+                        slide.status === 'Inactif'
+                          ? 'bg-gray-400 text-white'
+                          : 'bg-brand-500 text-white group-hover:bg-brand-600'
+                      }`}>
+                        {slide.order}
+                      </div>
+                      {slide.status === 'Actif' && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-gray-100 p-1 rounded">
+                            <div className="grid grid-cols-3 gap-0.5">
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          ⋮⋮
+                      )}
+                    </div>
+                    
+                    {/* Image du slide - format horizontal */}
+                    <div className={`w-48 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative ${
+                      slide.status === 'Inactif' ? 'opacity-60' : ''
+                    }`}>
+                      {slide.image ? (
+                        <img 
+                          src={slide.image} 
+                          alt={slide.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FaImages className="w-8 h-8 text-gray-400" />
                         </div>
-                      </div>
-                      <div className="col-span-4">
-                        <p className="text-sm font-medium text-gray-900">{slide.title}</p>
-                      </div>
-                      <div className="col-span-3">
-                        <p className="text-sm text-gray-500">{slide.subtitle}</p>
-                      </div>
-                      <div className="col-span-2">
+                      )}
+                    </div>
+                    
+                    {/* Contenu du slide */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-lg font-semibold mb-1 truncate ${
+                        slide.status === 'Inactif' ? 'text-gray-500' : 'text-slate-800'
+                      }`}>
+                        {slide.title}
+                      </h3>
+                      <p className={`text-sm mb-2 ${
+                        slide.status === 'Inactif' ? 'text-gray-400' : 'text-slate-600'
+                      }`}>
+                        {slide.subtitle}
+                      </p>
+                      <div className="flex items-center gap-2">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           slide.status === 'Actif' 
                             ? 'bg-green-100 text-green-800' 
@@ -1866,24 +3189,33 @@ export const AdminDashboard: React.FC = () => {
                           {slide.status}
                         </span>
                       </div>
-                      <div className="col-span-2 flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openModal('edit', 'slide', slide)}
-                          className="text-brand-600 hover:text-brand-700 p-2 hover:bg-brand-50 rounded-lg transition-colors"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => openModal('delete', 'slide', slide)}
-                          className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
-                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('edit', 'slide', slide);
+                        }}
+                        className="bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-all duration-200 shadow-md text-sm flex items-center gap-2 font-medium"
+                      >
+                        <FaEdit className="w-3 h-3" />
+                        Modifier
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('delete', 'slide', slide);
+                        }}
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-200 shadow-md text-sm font-medium"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -1892,47 +3224,107 @@ export const AdminDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-slate-800">Services</h1>
-                             <button
-                 onClick={() => openModal('add', 'service')}
-                 className="bg-brand-500 text-white px-6 py-3 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
-               >
-                 <FaPlus className="w-4 h-4" />
-                 Ajouter un service
-               </button>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">Services</h1>
+                <p className="text-sm text-slate-600 mt-1">Glissez-déposez pour réorganiser l'ordre d'affichage</p>
+              </div>
+              <button
+                onClick={() => openModal('add', 'service')}
+                className="bg-brand-500 text-white px-6 py-3 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter un service
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockServices.map((service) => (
-                <div key={service.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800">{service.name}</h3>
+              {services.sort((a, b) => a.order - b.order).map((service: any) => (
+                <div 
+                  key={service.id} 
+                  draggable
+                  onDragStart={(e) => handleServiceDragStart(e, service.id)}
+                  onDragOver={(e) => handleServiceDragOver(e, service.id)}
+                  onDragLeave={handleServiceDragLeave}
+                  onDrop={(e) => handleServiceDrop(e, service.id)}
+                  onDragEnd={handleServiceDragEnd}
+                  className={`bg-white rounded-xl shadow-lg border overflow-hidden cursor-move transition-all duration-200 group relative drag-card flex flex-col ${
+                    draggedServiceId === service.id 
+                      ? 'opacity-50 scale-95 border-brand-500' 
+                      : dragOverServiceId === service.id 
+                        ? 'border-brand-400 bg-brand-50 shadow-xl scale-105' 
+                        : 'border-gray-100 hover:shadow-xl hover:border-brand-300'
+                  }`}
+                >
+                  {/* Badge d'ordre */}
+                  <div className="absolute top-3 left-3 z-10 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg group-hover:bg-brand-600 transition-colors">
+                    {service.order}
+                  </div>
+                  
+                  {/* Indicateur de drag */}
+                  <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-md">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Image du service */}
+                  <div className="h-48 bg-gray-200 relative">
+                    {service.image ? (
+                      <img 
+                        src={service.image} 
+                        alt={service.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FaServicestack className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        service.status === 'Visible' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {service.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 flex flex-col h-full">
+                    <div className="flex-1 mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">{service.name}</h3>
                       <p className="text-sm text-slate-600">{service.description}</p>
                     </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      service.status === 'Visible' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {service.status}
-                    </span>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openModal('edit', 'service', service)}
-                      className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
-                    >
-                      <FaEdit className="w-3 h-3" />
-                      Modifier
-                    </button>
-                    <button
-                      onClick={() => openModal('delete', 'service', service)}
-                      className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm font-medium"
-                    >
-                      <FaTrash className="w-3 h-3" />
-                    </button>
+                    <div className="flex gap-2 mt-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('edit', 'service', service);
+                        }}
+                        className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
+                      >
+                        <FaEdit className="w-3 h-3" />
+                        Modifier
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('delete', 'service', service);
+                        }}
+                        className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 shadow-md text-sm font-medium"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1944,47 +3336,107 @@ export const AdminDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-slate-800">Secteurs</h1>
-                             <button
-                 onClick={() => openModal('add', 'secteur')}
-                 className="bg-brand-500 text-white px-6 py-3 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
-               >
-                 <FaPlus className="w-4 h-4" />
-                 Ajouter un secteur
-               </button>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">Secteurs</h1>
+                <p className="text-sm text-slate-600 mt-1">Glissez-déposez pour réorganiser l'ordre d'affichage</p>
+              </div>
+              <button
+                onClick={() => openModal('add', 'secteur')}
+                className="bg-brand-500 text-white px-6 py-3 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 font-medium"
+              >
+                <FaPlus className="w-4 h-4" />
+                Ajouter un secteur
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockSecteurs.map((secteur) => (
-                <div key={secteur.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800">{secteur.name}</h3>
+              {secteurs.sort((a, b) => a.order - b.order).map((secteur: any) => (
+                <div 
+                  key={secteur.id} 
+                  draggable
+                  onDragStart={(e) => handleSecteurDragStart(e, secteur.id)}
+                  onDragOver={(e) => handleSecteurDragOver(e, secteur.id)}
+                  onDragLeave={handleSecteurDragLeave}
+                  onDrop={(e) => handleSecteurDrop(e, secteur.id)}
+                  onDragEnd={handleSecteurDragEnd}
+                  className={`bg-white rounded-xl shadow-lg border overflow-hidden cursor-move transition-all duration-200 group relative drag-card flex flex-col ${
+                    draggedSecteurId === secteur.id 
+                      ? 'opacity-50 scale-95 border-brand-500' 
+                      : dragOverSecteurId === secteur.id 
+                        ? 'border-brand-400 bg-brand-50 shadow-xl scale-105' 
+                        : 'border-gray-100 hover:shadow-xl hover:border-brand-300'
+                  }`}
+                >
+                  {/* Badge d'ordre */}
+                  <div className="absolute top-3 left-3 z-10 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg group-hover:bg-brand-600 transition-colors">
+                    {secteur.order}
+                  </div>
+                  
+                  {/* Indicateur de drag */}
+                  <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-md">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Image du secteur */}
+                  <div className="h-48 bg-gray-200 relative">
+                    {secteur.image ? (
+                      <img 
+                        src={secteur.image} 
+                        alt={secteur.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FaIndustry className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        secteur.status === 'Visible' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {secteur.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 flex flex-col h-full">
+                    <div className="flex-1 mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">{secteur.name}</h3>
                       <p className="text-sm text-slate-600">{secteur.description}</p>
                     </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      secteur.status === 'Visible' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {secteur.status}
-                    </span>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openModal('edit', 'secteur', secteur)}
-                      className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
-                    >
-                      <FaEdit className="w-3 h-3" />
-                      Modifier
-                    </button>
-                    <button
-                      onClick={() => openModal('delete', 'secteur', secteur)}
-                      className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm font-medium"
-                    >
-                      <FaTrash className="w-3 h-3" />
-                    </button>
+                    <div className="flex gap-2 mt-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('edit', 'secteur', secteur);
+                        }}
+                        className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
+                      >
+                        <FaEdit className="w-3 h-3" />
+                        Modifier
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal('delete', 'secteur', secteur);
+                        }}
+                        className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 shadow-md text-sm font-medium"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -2015,18 +3467,30 @@ export const AdminDashboard: React.FC = () => {
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-slate-800 mb-2">{item.title}</h3>
                     <p className="text-sm text-slate-600 mb-2">{item.category}</p>
-                    <p className="text-xs text-slate-500 mb-4">{item.date}</p>
+                    <p className="text-xs text-slate-500 mb-4">
+                      {(() => {
+                        const date = new Date(item.date);
+                        const day = date.getDate();
+                        const months = [
+                          'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                          'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                        ];
+                        const month = months[date.getMonth()];
+                        const year = date.getFullYear();
+                        return `le ${day} ${month} ${year}`;
+                      })()}
+                    </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => openModal('edit', 'portfolio', item)}
-                        className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
+                        className="flex-1 bg-brand-500 text-white px-3 py-2 rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-md text-sm flex items-center justify-center gap-2 font-medium"
                       >
                         <FaEdit className="w-3 h-3" />
                         Modifier
                       </button>
                       <button
                         onClick={() => openModal('delete', 'portfolio', item)}
-                        className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 transform hover:scale-105 shadow-md text-sm font-medium"
+                        className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600 transition-all duration-200 shadow-md text-sm font-medium"
                       >
                         <FaTrash className="w-3 h-3" />
                       </button>
@@ -2524,7 +3988,55 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <>
+      <style>{`
+        .drag-card {
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        .drag-card img {
+          pointer-events: none;
+        }
+        
+        .drag-card:active {
+          transform: scale(0.98);
+        }
+
+        /* Barres de défilement personnalisées */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: #98c21d;
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: #7fb069;
+        }
+
+        ::-webkit-scrollbar-corner {
+          background: #f1f5f9;
+        }
+
+        /* Pour Firefox */
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: #98c21d #f1f5f9;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-50 flex">
       <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col h-screen sticky top-0">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-xl font-bold text-slate-800">Administration</h1>
@@ -2582,5 +4094,6 @@ export const AdminDashboard: React.FC = () => {
         {renderModalContent()}
       </Modal>
     </div>
+    </>
   );
 };

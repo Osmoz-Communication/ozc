@@ -64,22 +64,19 @@ export const Header: React.FC = () => {
       <div className="bg-slate-800 text-white py-2 px-4 text-sm hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-6">
-            <span className="text-brand-400">DU LUNDI AU VENDREDI DE 8H30 À 18H30</span>
+            <span className="text-brand-400">OUVERT DU LUNDI AU VENDREDI DE 8H30 À 18H30</span>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Phone size={16} />
-              <span>01 84 19 01 04</span>
-            </div>
             <div className="flex items-center space-x-2">
               <Mail size={16} />
               <span>contact@ozc.fr</span>
             </div>
             <a
               href="tel:0184190104"
-              className="bg-brand-500 hover:bg-brand-600 px-4 py-1 rounded transition-colors"
+              className="bg-brand-500 hover:bg-brand-600 px-4 py-1 rounded transition-colors flex items-center space-x-2"
             >
-              NOUS APPELER
+              <Phone size={16} />
+              <span>NOUS APPELER</span>
             </a>
           </div>
         </div>
@@ -291,7 +288,7 @@ export const Header: React.FC = () => {
                       <span>contact@ozc.fr</span>
                     </div>
                     <div className="text-sm text-brand-600 font-medium">
-                      Du lundi au vendredi de 8h30 à 18h30
+                      Ouvert du lundi au vendredi de 8h30 à 18h30
                     </div>
                   </div>
                 </div>
